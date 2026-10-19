@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script>try { const t = localStorage.getItem('orvane-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+  <title>Orvane – Meridian</title>
+  <meta name="description" content="Orvane Meridian – Haute Horlogerie. Demo-Shop einer fiktiven Uhrenmarke.">
+  <link rel="icon" href="assets/img/logo.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#0b0a09" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f6f1e9" media="(prefers-color-scheme: light)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Orvane">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="css/styles.css">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.min.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div class="watch-stage" id="watch-stage" role="img" aria-label="3D-Ansicht der Orvane Meridian. Ziehen zum Drehen, Ctrl und Mausrad zum Zoomen."></div>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Orvane Startseite">
+      <span class="brand-mark brand-mark-color" data-logo="shimmer"></span>
+      <span class="brand-mark brand-mark-mono" data-logo="mono"></span>
+      <span class="brand-word">ORVANE</span>
+    </a>
+    <nav class="site-nav" aria-label="Hauptnavigation">
+      <a href="#story">Meridian</a>
+      <a href="#details">Details</a>
+      <a href="#configure">Konfigurieren</a>
+      <a href="#collection" hidden>Kollektion</a>
+      <a href="history.html" class="nav-secondary">Verlauf</a>
+      <a href="logos.html">Logo</a>
+    </nav>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Helles Design aktivieren">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      <span data-theme-label>Hell</span>
+    </button>
+    <button class="cart-button" type="button" aria-controls="cart" aria-expanded="false">
+      Warenkorb <span class="cart-count" data-cart-count>0</span>
+    </button>
+  </header>
+
+  <main id="top">
+    <section class="hero see-through" id="hero">
+      <p class="stage-hint" aria-hidden="true">Ziehen zum Drehen · Ctrl + Mausrad zum Zoomen</p>
+      <div class="hero-copy">
+        <p class="eyebrow">Haute Horlogerie</p>
+        <h1>Meridian</h1>
+        <p class="lead">Die Zeit, in Gold gefasst.</p>
+        <a class="button" href="#configure">Jetzt konfigurieren</a>
+      </div>
+      <p class="scroll-hint" aria-hidden="true">Scrollen</p>
+    </section>
+
+    <section class="story see-through" id="story" aria-label="Die Meridian im Detail">
+      <div class="story-step" data-step="case">
+        <div class="story-text">
+          <p class="eyebrow">01 · Gehäuse</p>
+          <h2>Aus einem Block gefräst.</h2>
+          <p>18 Karat Gelbgold, 41 mm, von Hand poliert. Die Bandanstösse fliessen nahtlos in das Gliederband.</p>
+        </div>
+      </div>
+      <div class="story-step" data-step="glass">
+        <div class="story-text">
+          <p class="eyebrow">02 · Glas</p>
+          <h2>Saphir. Beidseitig entspiegelt.</h2>
+          <p>Gewölbtes Saphirglas mit Härte 9. Kratzfest und klar wie ein Bergsee.</p>
+        </div>
+      </div>
+      <div class="story-step" data-step="movement">
+        <div class="story-text">
+          <p class="eyebrow">03 · Werk</p>
+          <h2>Kaliber OR-01.</h2>
+          <p>Automatik mit 72 Stunden Gangreserve. Durch den Saphirboden sieht man den Rotor arbeiten.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="banner" aria-label="Markenbild">
+      <img class="banner-image" src="assets/img/lifestyle.svg" alt="Platzhalter: Berglandschaft im Abendlicht" width="1600" height="900" loading="lazy" decoding="async">
+      <blockquote class="banner-quote">
+        <p>«Gemacht für Momente, die bleiben.»</p>
+      </blockquote>
+    </section>
+
+    <section class="details" id="details">
+      <div class="container">
+        <p class="eyebrow center">Technische Daten</p>
+        <h2 class="section-title">Präzision in Zahlen.</h2>
+
+        <ul class="stats" role="list">
+          <li><span class="stat-value">41<small>mm</small></span><span class="stat-label">Durchmesser</span></li>
+          <li><span class="stat-value">10,8<small>mm</small></span><span class="stat-label">Höhe</span></li>
+          <li><span class="stat-value">72<small>h</small></span><span class="stat-label">Gangreserve</span></li>
+          <li><span class="stat-value">100<small>m</small></span><span class="stat-label">Wasserdicht</span></li>
+        </ul>
+
+        <div class="details-layout">
+          <figure class="details-figure">
+            <img src="assets/img/movement.svg" alt="Platzhalter: Illustration des Kalibers OR-01" width="800" height="800" loading="lazy" decoding="async">
+            <figcaption>Kaliber OR-01 – Sichtboden aus Saphirglas</figcaption>
+          </figure>
+          <div class="details-grid">
+            <article class="detail-card">
+              <h3>Material</h3>
+              <dl>
+                <dt>Gehäuse</dt><dd>18K Gelbgold, Roségold oder Edelstahl 904L</dd>
+                <dt>Glas</dt><dd>Saphirglas, gewölbt, entspiegelt</dd>
+                <dt>Armband</dt><dd>Gliederband oder Leder</dd>
+              </dl>
+            </article>
+            <article class="detail-card">
+              <h3>Werk</h3>
+              <dl>
+                <dt>Kaliber</dt><dd>OR-01, Automatik</dd>
+                <dt>Frequenz</dt><dd>28'800 A/h (4 Hz)</dd>
+                <dt>Steine</dt><dd>31</dd>
+              </dl>
+            </article>
+            <article class="detail-card">
+              <h3>Masse</h3>
+              <dl>
+                <dt>Durchmesser</dt><dd>41 mm</dd>
+                <dt>Bandbreite</dt><dd>20 mm</dd>
+                <dt>Gewicht</dt><dd>ca. 148 g (Gold, Gliederband)</dd>
+              </dl>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="configure see-through" id="configure">
+      <div class="configure-space" aria-hidden="true"></div>
+      <form class="configure-panel" id="configure-form">
+        <p class="eyebrow">Konfigurator</p>
+        <h2>Ihre Meridian</h2>
+        <fieldset>
+          <legend>Gehäuse <span data-selected="case"></span></legend>
+          <div class="swatches" data-option="case"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Armband <span data-selected="strap"></span></legend>
+          <div class="swatches" data-option="strap"></div>
+        </fieldset>
+        <p class="price" data-price>–</p>
+        <button class="button button-solid" type="submit">In den Warenkorb</button>
+        <p class="fine-print">Demo-Shop. Es findet keine Zahlung statt.</p>
+      </form>
+    </section>
+
+    <!-- Collection hidden while Orvane carries a single model; remove "hidden" to show it again --><section class="collection" id="collection" hidden>
+      <div class="container">
+        <p class="eyebrow center">Kollektion</p>
+        <h2 class="section-title">Vier Charaktere.</h2>
+        <div class="collection-grid" id="collection-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="cart-backdrop" data-cart-close hidden></div>
+  <aside class="cart" id="cart" aria-label="Warenkorb" hidden>
+    <div class="cart-header">
+      <h2>Warenkorb</h2>
+      <button type="button" class="cart-close" data-cart-close aria-label="Warenkorb schliessen">×</button>
+    </div>
+    <ul class="cart-items" data-cart-items></ul>
+    <p class="cart-empty" data-cart-empty>Ihr Warenkorb ist leer.</p>
+    <div class="cart-footer">
+      <p class="cart-total"><span>Total</span> <span data-cart-total>–</span></p>
+      <button type="button" class="button button-solid" disabled>Zur Kasse (Demo)</button>
+    </div>
+  </aside>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <a class="brand" href="#top">
+          <span class="brand-mark" data-logo="mono"></span>
+          <span class="brand-word">ORVANE</span>
+        </a>
+        <p class="footer-note">Fiktive Marke. Demo-Shop ohne echte Zahlung.</p>
+      </div>
+      <nav aria-label="Fusszeile" hidden>
+        <h3>Kollektion</h3>
+        <a href="#collection">Meridian</a>
+        <a href="#collection">Solstice</a>
+        <a href="#collection">Abyss</a>
+      </nav>
+      <nav aria-label="Service">
+        <h3>Service</h3>
+        <a href="#details">Technische Daten</a>
+        <a href="#configure">Konfigurator</a>
+        <a href="#top">Nach oben</a>
+        <a href="history.html">Modell-Verlauf (intern)</a>
+      </nav>
+    </div>
+    <p class="container footer-copy">© <span id="year"></span> Orvane</p>
+  </footer>
+  <script type="module" src="js/brand.js"></script>
+</body>
+</html>

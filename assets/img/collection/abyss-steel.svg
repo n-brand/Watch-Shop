@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#2a231b"/><stop offset="1" stop-color="#0b0a09"/></radialGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef0f2"/><stop offset="1" stop-color="#868d94"/></linearGradient>
+    <radialGradient id="dial"><stop offset="0" stop-color="#1d3a66"/><stop offset="1" stop-color="#081428"/></radialGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg)"/>
+  <g fill="url(#metal)" opacity="0.92"><rect x="325" y="80" width="150" height="40" rx="10"/><rect x="327" y="126" width="146" height="40" rx="10"/><rect x="329" y="172" width="142" height="40" rx="10"/><rect x="331" y="218" width="138" height="40" rx="10"/><rect x="333" y="264" width="134" height="40" rx="10"/><rect x="335" y="310" width="130" height="40" rx="10"/><rect x="325" y="880" width="150" height="40" rx="10"/><rect x="327" y="834" width="146" height="40" rx="10"/><rect x="329" y="788" width="142" height="40" rx="10"/><rect x="331" y="742" width="138" height="40" rx="10"/><rect x="333" y="696" width="134" height="40" rx="10"/><rect x="335" y="650" width="130" height="40" rx="10"/></g>
+  <rect x="320" y="300" width="160" height="400" rx="18" fill="url(#metal)"/>
+  <rect x="580" y="482" width="30" height="36" rx="6" fill="url(#metal)"/>
+  <circle cx="400" cy="500" r="182" fill="url(#metal)"/>
+  <circle cx="400" cy="500" r="156" fill="url(#dial)"/>
+  <g stroke="#dfe7f2" stroke-width="7" stroke-linecap="round"><line x1="400.0" y1="382.0" x2="400.0" y2="360.0"/><line x1="462.0" y1="392.6" x2="470.0" y2="378.8"/><line x1="507.4" y1="438.0" x2="521.2" y2="430.0"/><line x1="518.0" y1="500.0" x2="540.0" y2="500.0"/><line x1="507.4" y1="562.0" x2="521.2" y2="570.0"/><line x1="462.0" y1="607.4" x2="470.0" y2="621.2"/><line x1="400.0" y1="618.0" x2="400.0" y2="640.0"/><line x1="338.0" y1="607.4" x2="330.0" y2="621.2"/><line x1="292.6" y1="562.0" x2="278.8" y2="570.0"/><line x1="282.0" y1="500.0" x2="260.0" y2="500.0"/><line x1="292.6" y1="438.0" x2="278.8" y2="430.0"/><line x1="338.0" y1="392.6" x2="330.0" y2="378.8"/></g>
+  <text x="400" y="440" text-anchor="middle" font-family="Georgia, serif" font-size="22" letter-spacing="6" fill="#dfe7f2">ORVANE</text>
+  <g stroke="#dfe7f2" stroke-linecap="round">
+    <line x1="400" y1="500" x2="455" y2="440" stroke-width="7"/>
+    <line x1="400" y1="500" x2="335" y2="405" stroke-width="5"/>
+  </g>
+  <circle cx="400" cy="500" r="7" fill="#dfe7f2"/>
+  <text x="400" y="960" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" letter-spacing="4" fill="#6f675c">PLATZHALTER</text>
+</svg>

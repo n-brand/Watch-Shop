@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2c20"/><stop offset="0.55" stop-color="#7a5636"/><stop offset="1" stop-color="#1a140f"/></linearGradient>
+    <radialGradient id="sun" cx="68%" cy="52%" r="30%"><stop offset="0" stop-color="#f6d7a6" stop-opacity="0.9"/><stop offset="1" stop-color="#f6d7a6" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#sun)"/>
+  <path d="M0 640 L260 470 L420 560 L640 380 L860 560 L1040 450 L1280 600 L1600 480 L1600 900 L0 900 Z" fill="#1e1712" opacity="0.85"/>
+  <path d="M0 720 L300 610 L560 690 L820 590 L1100 700 L1400 620 L1600 680 L1600 900 L0 900 Z" fill="#0f0c09"/>
+  <text x="800" y="860" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" letter-spacing="5" fill="#6f675c">PLATZHALTER – EIGENES BILD EINSETZEN</text>
+</svg>
