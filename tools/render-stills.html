@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orvane – Produktbilder rendern</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.min.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    body { margin: 0; padding: 1.5rem; background: #0b0a09; color: #ece6dc; font: 300 0.9rem/1.5 system-ui, sans-serif; }
+    h1 { font-weight: 400; margin: 0 0 0.5rem; }
+    p { color: #9c9488; margin: 0 0 1rem; }
+    button { padding: 0.6rem 1.2rem; font: inherit; cursor: pointer; }
+    #stage { position: fixed; left: -10000px; top: 0; }
+    #out { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    figure { margin: 0; background: radial-gradient(ellipse at 50% 45%, #2a2219, #0b0a09 75%); }
+    figure img { width: 100%; display: block; }
+    figcaption { padding: 0.4rem 0.6rem; font-size: 0.75rem; color: #9c9488; }
+  </style>
+</head>
+<body>
+  <h1>Produktbilder rendern</h1>
+  <p>Rendert die Uhr aus Code als WebP mit transparentem Hintergrund nach <code>assets/img/renders/</code>. Nur lokal mit <code>node server.js</code>.</p>
+  <button type="button" id="render" disabled>Alle rendern und speichern</button>
+  <span id="status"></span>
+  <div id="stage"></div>
+  <div id="out"></div>
+  <script type="module" src="render-stills.js"></script>
+</body>
+</html>

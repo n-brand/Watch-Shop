@@ -1,14 +1,7 @@
-import { createViewer } from './scene.js';
 import { COLLECTION, CASE_OPTIONS, STRAP_OPTIONS } from './products.js';
 import { renderSwatches, renderCollection } from './ui.js';
-import { initScroll } from './scroll.js';
 import { initConfigurator } from './configurator.js';
 import { createCart } from './cart.js';
-
-// ?reduced-motion forces the reduced path for testing
-const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  || new URLSearchParams(location.search).has('reduced-motion');
-document.documentElement.classList.toggle('reduced-motion', reducedMotion);
 
 document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -16,8 +9,7 @@ renderSwatches(document.querySelector('[data-option="case"]'), 'case', CASE_OPTI
 renderSwatches(document.querySelector('[data-option="strap"]'), 'strap', STRAP_OPTIONS, 'bracelet');
 renderCollection(document.getElementById('collection-grid'), COLLECTION);
 
-let lenis = null;
-const cart = createCart({ onOpenChange: (open) => (open ? lenis?.stop() : lenis?.start()) });
+const cart = createCart({ onOpenChange: (open) => document.documentElement.classList.toggle('no-scroll', open) });
 
 document.getElementById('collection-grid').addEventListener('click', (e) => {
   const id = e.target.closest('[data-add-product]')?.dataset.addProduct;
@@ -25,20 +17,7 @@ document.getElementById('collection-grid').addEventListener('click', (e) => {
   if (product) cart.add({ key: product.id, name: product.name, variant: product.variant, price: product.price, image: product.image });
 });
 
-const viewer = await createViewer(document.getElementById('watch-stage'), { reducedMotion });
-window.orvane = viewer;
-
-initConfigurator(document.getElementById('configure-form'), viewer, { onAdd: cart.add });
-
-// Only render while a see-through section is on screen
-const visible = new Set();
-const io = new IntersectionObserver((entries) => {
-  for (const e of entries) e.isIntersecting ? visible.add(e.target) : visible.delete(e.target);
-  viewer.setRunning(visible.size > 0);
-});
-document.querySelectorAll('.see-through').forEach((el) => io.observe(el));
-
-lenis = initScroll(viewer, { reducedMotion });
+initConfigurator(document.getElementById('configure-form'), document.querySelector('[data-configure-image]'), { onAdd: cart.add });
 
 // Highlight the nav entry of the section in the middle of the viewport
 const navLinks = [...document.querySelectorAll('.site-nav a[href^="#"]')];

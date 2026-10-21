@@ -7,6 +7,7 @@ const PORT = Number(process.env.PORT) || 5173;
 const ROOT = __dirname;
 const HISTORY_DIR = path.join(ROOT, 'assets', 'models', 'history');
 const HISTORY_INDEX = path.join(HISTORY_DIR, 'index.json');
+const RENDER_DIR = path.join(ROOT, 'assets', 'img', 'renders');
 const MAX_MODEL_BYTES = 30 * 1024 * 1024;
 const MAX_THUMB_BYTES = 2 * 1024 * 1024;
 
@@ -96,6 +97,24 @@ function saveThumbnail(req, res, id) {
   });
 }
 
+// POST /api/renders/<name>.webp: product still from tools/render-stills.html. Renders are regenerated, so overwriting is fine.
+function saveRender(req, res, name) {
+  if (!isTrustedWrite(req)) {
+    res.writeHead(403).end('Forbidden');
+    return;
+  }
+  readBody(req, res, MAX_THUMB_BYTES, (data) => {
+    if (data.subarray(0, 4).toString('ascii') !== 'RIFF' || data.subarray(8, 12).toString('ascii') !== 'WEBP') {
+      res.writeHead(400).end('Body is not a WebP image');
+      return;
+    }
+    fs.mkdirSync(RENDER_DIR, { recursive: true });
+    fs.writeFileSync(path.join(RENDER_DIR, `${name}.webp`), data);
+    console.log(`Saved render ${name}.webp (${(data.length / 1024).toFixed(0)} KB)`);
+    res.writeHead(201).end();
+  });
+}
+
 // POST /api/versions: body is a .glb, X-Version-Note the URI-encoded description
 function saveVersion(req, res) {
   if (!isTrustedWrite(req)) {
@@ -160,8 +179,10 @@ function serveStatic(req, res) {
 
 const server = http.createServer((req, res) => {
   const thumbMatch = req.url.match(/^\/api\/versions\/(v\d{3,})\/thumbnail$/);
+  const renderMatch = req.url.match(/^\/api\/renders\/([a-z0-9-]{1,40})\.webp$/);
   if (req.method === 'POST' && req.url === '/api/versions') saveVersion(req, res);
   else if (req.method === 'POST' && thumbMatch) saveThumbnail(req, res, thumbMatch[1]);
+  else if (req.method === 'POST' && renderMatch) saveRender(req, res, renderMatch[1]);
   else if (req.method === 'GET' || req.method === 'HEAD') serveStatic(req, res);
   else res.writeHead(405).end('Method not allowed');
 });

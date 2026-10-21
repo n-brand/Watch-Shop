@@ -16,35 +16,21 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500&display=swap">
   <link rel="stylesheet" href="css/styles.css">
+  <!-- Product images are stills of the 3D model, rendered with tools/render-stills.html -->
+  <link rel="preload" href="assets/img/renders/hero.webp" as="image" type="image/webp" fetchpriority="high">
 
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.min.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
-    }
-  }
-  </script>
-  <!-- Fetch three.js right away instead of after the page script has been parsed -->
-  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.min.js" crossorigin>
-  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
   <script type="module" src="js/main.js"></script>
 </head>
 <body>
-  <div class="watch-stage" id="watch-stage" role="img" aria-label="3D-Ansicht der Orvane Meridian. Ziehen zum Drehen, Ctrl und Mausrad zum Zoomen."></div>
-
   <header class="site-header">
     <a class="brand" href="#top" aria-label="Orvane Startseite">
       <span class="brand-mark brand-mark-color" data-logo="shimmer"></span>
       <span class="brand-mark brand-mark-mono" data-logo="mono"></span>
       <span class="brand-word">ORVANE</span>
     </a>
-    <nav class="site-nav" aria-label="Hauptnavigation">
+    <nav class="site-nav" id="site-nav" aria-label="Hauptnavigation">
       <a href="#story">Meridian</a>
       <a href="#details">Details</a>
       <a href="#configure">Konfigurieren</a>
@@ -60,22 +46,27 @@
     <button class="cart-button" type="button" aria-controls="cart" aria-expanded="false">
       Warenkorb <span class="cart-count" data-cart-count>0</span>
     </button>
+    <button class="nav-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Menü öffnen">
+      <span class="nav-toggle-bars" aria-hidden="true"></span>
+    </button>
   </header>
 
   <main id="top">
-    <section class="hero see-through" id="hero">
-      <p class="stage-hint" aria-hidden="true">Ziehen zum Drehen · Ctrl + Mausrad zum Zoomen</p>
+    <section class="hero" id="hero">
+      <figure class="hero-media product-shot">
+        <img src="assets/img/renders/hero.webp" alt="Orvane Meridian in Gelbgold mit Gliederband, Frontansicht" width="1200" height="1500" fetchpriority="high" decoding="async">
+      </figure>
       <div class="hero-copy">
         <p class="eyebrow">Haute Horlogerie</p>
         <h1>Meridian</h1>
         <p class="lead">Die Zeit, in Gold gefasst.</p>
         <a class="button" href="#configure">Jetzt konfigurieren</a>
       </div>
-      <p class="scroll-hint" aria-hidden="true">Scrollen</p>
     </section>
 
-    <section class="story see-through" id="story" aria-label="Die Meridian im Detail">
+    <section class="story" id="story" aria-label="Die Meridian im Detail">
       <div class="story-step" data-step="case">
+        <figure class="story-media product-shot"><img src="assets/img/renders/case.webp" alt="Gehäuse und Gliederband der Meridian, schräg von vorne" width="1200" height="1500" loading="lazy" decoding="async"></figure>
         <div class="story-text">
           <p class="eyebrow">01 · Gehäuse</p>
           <h2>Aus einem Block gefräst.</h2>
@@ -83,6 +74,7 @@
         </div>
       </div>
       <div class="story-step" data-step="glass">
+        <figure class="story-media product-shot"><img src="assets/img/renders/glass.webp" alt="Nahaufnahme von Zifferblatt und Saphirglas" width="1200" height="1500" loading="lazy" decoding="async"></figure>
         <div class="story-text">
           <p class="eyebrow">02 · Glas</p>
           <h2>Saphir. Beidseitig entspiegelt.</h2>
@@ -90,6 +82,7 @@
         </div>
       </div>
       <div class="story-step" data-step="movement">
+        <figure class="story-media product-shot"><img src="assets/img/renders/movement.webp" alt="Gehäuseboden mit Sichtfenster auf Werk und Rotor" width="1200" height="1500" loading="lazy" decoding="async"></figure>
         <div class="story-text">
           <p class="eyebrow">03 · Werk</p>
           <h2>Kaliber OR-01.</h2>
@@ -118,9 +111,9 @@
         </ul>
 
         <div class="details-layout">
-          <figure class="details-figure">
-            <img src="assets/img/movement.svg" alt="Platzhalter: Illustration des Kalibers OR-01" width="800" height="800" loading="lazy" decoding="async">
-            <figcaption>Kaliber OR-01 – Sichtboden aus Saphirglas</figcaption>
+          <figure class="details-figure product-shot">
+            <img src="assets/img/renders/profile.webp" alt="Die Meridian im Profil mit Krone" width="1200" height="1200" loading="lazy" decoding="async">
+            <figcaption>Im Profil – 10,8 mm flach, Krone mit Rändelung</figcaption>
           </figure>
           <div class="details-grid">
             <article class="detail-card">
@@ -152,8 +145,10 @@
       </div>
     </section>
 
-    <section class="configure see-through" id="configure">
-      <div class="configure-space" aria-hidden="true"></div>
+    <section class="configure" id="configure">
+      <figure class="configure-media product-shot">
+        <img src="assets/img/renders/meridian-yellow-bracelet.webp" alt="Meridian in Gelbgold mit Gliederband" width="1200" height="1500" data-configure-image loading="lazy" decoding="async">
+      </figure>
       <form class="configure-panel" id="configure-form">
         <p class="eyebrow">Konfigurator</p>
         <h2>Ihre Meridian</h2>

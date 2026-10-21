@@ -1,20 +1,8 @@
-import { CURRENCY, MATERIAL_NAMES, STRAP_VARIANTS } from './config.js';
-import { CASE_OPTIONS, STRAP_OPTIONS } from './products.js';
-import { METALS } from './watch/materials.js';
+import { CURRENCY } from './config.js';
+import { CASE_OPTIONS, STRAP_OPTIONS, renderImage } from './products.js';
 
-function forEachMaterial(root, name, fn) {
-  root.traverse((obj) => {
-    if (!obj.isMesh) return;
-    for (const mat of [obj.material].flat()) if (mat.name === name) fn(mat);
-  });
-}
-
-export function initConfigurator(form, viewer, { onAdd }) {
-  const { watch, parts } = viewer;
-  const strapVariants = Object.fromEntries(
-    Object.entries(STRAP_VARIANTS).map(([key, name]) => [key, parts.strap?.getObjectByName(name) ?? null]),
-  );
-
+// Shows the pre-rendered still for the chosen case and strap (see tools/render-stills.html)
+export function initConfigurator(form, image, { onAdd }) {
   const current = () => {
     const data = new FormData(form);
     return {
@@ -25,21 +13,20 @@ export function initConfigurator(form, viewer, { onAdd }) {
 
   function update() {
     const { caseOpt, strapOpt } = current();
-
-    const metal = METALS[caseOpt.metal];
-    forEachMaterial(watch, MATERIAL_NAMES.caseMetal, (mat) => mat.color.setHex(metal.color));
-
-    for (const [key, node] of Object.entries(strapVariants)) {
-      if (node) node.visible = key === strapOpt.variant;
-    }
-    if (strapOpt.color !== undefined) {
-      forEachMaterial(watch, MATERIAL_NAMES.leather, (mat) => mat.color.setHex(strapOpt.color));
-    }
+    image.src = renderImage(caseOpt, strapOpt);
+    image.alt = `Meridian in ${caseOpt.label} mit ${strapOpt.label}`;
 
     form.querySelector('[data-selected="case"]').textContent = caseOpt.label;
     form.querySelector('[data-selected="strap"]').textContent = strapOpt.label;
     form.querySelector('[data-price]').textContent = CURRENCY.format(caseOpt.price + strapOpt.price);
   }
+
+  // Warm the cache for all variants once the configurator comes close, so switching is instant
+  new IntersectionObserver((entries, observer) => {
+    if (!entries.some((e) => e.isIntersecting)) return;
+    observer.disconnect();
+    for (const c of CASE_OPTIONS) for (const s of STRAP_OPTIONS) new Image().src = renderImage(c, s);
+  }, { rootMargin: '600px 0px' }).observe(form);
 
   form.addEventListener('change', update);
   form.addEventListener('submit', (e) => {
@@ -50,7 +37,7 @@ export function initConfigurator(form, viewer, { onAdd }) {
       name: 'Meridian',
       variant: `${caseOpt.label} · ${strapOpt.label}`,
       price: caseOpt.price + strapOpt.price,
-      image: caseOpt.image,
+      image: renderImage(caseOpt, strapOpt),
     });
   });
   update();

@@ -1,9 +1,10 @@
-// Prices in CHF. Images are placeholders; swap the paths for real WebP/AVIF files.
+// Prices in CHF. Meridian images are stills of the 3D model (tools/render-stills.html);
+// the hidden collection still uses placeholder SVGs.
 
 export const CASE_OPTIONS = [
-  { id: 'rose', label: 'Roségold', metal: 'roseGold', swatch: '#d9a383', price: 24800, image: 'assets/img/collection/meridian-rose.svg' },
-  { id: 'yellow', label: 'Gelbgold', metal: 'yellowGold', swatch: '#e2c07a', price: 25600, image: 'assets/img/collection/solstice-gold.svg' },
-  { id: 'steel', label: 'Edelstahl', metal: 'steel', swatch: '#c9ccd0', price: 9400, image: 'assets/img/collection/meridian-steel.svg' },
+  { id: 'rose', label: 'Roségold', metal: 'roseGold', swatch: '#d9a383', price: 24800 },
+  { id: 'yellow', label: 'Gelbgold', metal: 'yellowGold', swatch: '#e2c07a', price: 25600 },
+  { id: 'steel', label: 'Edelstahl', metal: 'steel', swatch: '#c9ccd0', price: 9400 },
 ];
 
 export const STRAP_OPTIONS = [
@@ -11,6 +12,8 @@ export const STRAP_OPTIONS = [
   { id: 'leather-brown', label: 'Leder Cognac', variant: 'leather', color: 0x4a2412, swatch: '#7a4a2a', price: -1800 },
   { id: 'leather-black', label: 'Leder Schwarz', variant: 'leather', color: 0x0e0d0d, swatch: '#1c1a19', price: -1800 },
 ];
+
+export const renderImage = (caseOpt, strapOpt) => `assets/img/renders/meridian-${caseOpt.id}-${strapOpt.id}.webp`;
 
 export const COLLECTION = [
   {

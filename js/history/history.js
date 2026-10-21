@@ -67,6 +67,9 @@ async function showDetail(index) {
   $('detail-next').disabled = !next;
   $('detail-prev-label').textContent = prev ? ` ${prev.id}` : '';
   $('detail-next-label').textContent = next ? `${next.id} ` : '';
+  $('lightbox-prev').disabled = !prev;
+  $('lightbox-next').disabled = !next;
+  $('lightbox-title').textContent = `${v.id} · ${index + 1} / ${versions.length}`;
   document.title = `Orvane – Verlauf ${v.id}`;
 
   const path = `${HISTORY_URL}${v.file}`;
@@ -91,7 +94,17 @@ function prefetch(url) {
   fetch(url, { priority: 'low' }).then((res) => res.arrayBuffer()).catch(() => prefetched.delete(url));
 }
 
+// Lightbox: on phones the 3D stage takes the whole screen, with arrows to step through the versions
+const narrow = window.matchMedia('(max-width: 860px)');
+function setLightbox(on) {
+  detailView.classList.toggle('is-lightbox', on);
+  document.documentElement.classList.toggle('no-scroll', on);
+  document.documentElement.classList.toggle('lightbox-open', on);
+}
+const inLightbox = () => detailView.classList.contains('is-lightbox');
+
 function showGrid() {
+  setLightbox(false);
   currentIndex = -1;
   detailView.hidden = true;
   gridView.hidden = false;
@@ -108,6 +121,8 @@ function route() {
   } else {
     // Detail view always starts at the top, not at the grid's scroll position
     window.scrollTo({ top: 0, behavior: 'instant' });
+    // Coming from the grid on a phone: open straight into the lightbox
+    if (currentIndex === -1 && narrow.matches) setLightbox(true);
     viewer?.setRunning(true);
     showDetail(index);
   }
@@ -119,10 +134,18 @@ const go = (index) => {
 
 $('detail-prev').addEventListener('click', () => go(currentIndex - 1));
 $('detail-next').addEventListener('click', () => go(currentIndex + 1));
+$('lightbox-prev').addEventListener('click', () => go(currentIndex - 1));
+$('lightbox-next').addEventListener('click', () => go(currentIndex + 1));
+$('lightbox-open').addEventListener('click', () => setLightbox(true));
+$('lightbox-close').addEventListener('click', () => setLightbox(false));
+narrow.addEventListener('change', (e) => {
+  if (!e.matches) setLightbox(false);
+});
 document.addEventListener('keydown', (e) => {
   if (detailView.hidden || e.altKey || e.ctrlKey || e.metaKey) return;
   if (e.key === 'ArrowLeft') go(currentIndex - 1);
   else if (e.key === 'ArrowRight') go(currentIndex + 1);
+  else if (e.key === 'Escape' && inLightbox()) setLightbox(false);
   else if (e.key === 'Escape') location.hash = '';
   else return;
   e.preventDefault();
