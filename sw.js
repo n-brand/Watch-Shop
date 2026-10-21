@@ -1,5 +1,6 @@
 // Orvane service worker: makes the shop, history and logo page work offline.
 // Own files: network first (so development changes show up immediately), cache as offline fallback.
+// Saved history models (vNNN.glb): cache first, they are immutable once stored.
 // CDN libraries and fonts: cache first (their URLs are version-pinned and never change).
 // Bump VERSION when the precache list changes.
 // All paths are relative to this file, so the app also works in a sub-folder (e.g. GitHub Pages /Watch-Shop/).
@@ -79,7 +80,9 @@ self.addEventListener('fetch', (event) => {
 
   if (url.origin === self.location.origin) {
     if (url.pathname.startsWith(new URL('./api/', self.location).pathname)) return; // saving versions needs the live local server
-    event.respondWith(networkFirst(request));
+    // Saved models are never overwritten (server.js refuses), so a cached vNNN.glb stays valid
+    if (/\/assets\/models\/history\/v\d{3,}\.glb$/.test(url.pathname)) event.respondWith(cacheFirst(request));
+    else event.respondWith(networkFirst(request));
   } else if (CACHE_FIRST_HOSTS.has(url.hostname)) {
     event.respondWith(cacheFirst(request));
   }

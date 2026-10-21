@@ -109,6 +109,8 @@ export async function createViewer(container, { reducedMotion = false, modelPath
     running = on;
     renderer.setAnimationLoop(on ? render : null);
   };
+  // Compile all shaders up front (in parallel where KHR_parallel_shader_compile exists), so the first frame doesn't stall
+  await renderer.compileAsync(scene, camera);
   render();
 
   // Swap the displayed model; the camera orbit is kept so versions compare from the same angle.
@@ -116,6 +118,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   async function setModel(path) {
     const request = ++modelRequest;
     const next = await loadWatch({ path });
+    if (request === modelRequest) await renderer.compileAsync(next.root, camera, scene);
     if (request !== modelRequest) {
       disposeTree(next.root);
       return false;
