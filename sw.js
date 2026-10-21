@@ -4,7 +4,7 @@
 // CDN libraries and fonts: cache first (their URLs are version-pinned and never change).
 // Bump VERSION when the precache list changes.
 // All paths are relative to this file, so the app also works in a sub-folder (e.g. GitHub Pages /Watch-Shop/).
-const VERSION = 'orvane-v2';
+const VERSION = 'orvane-v3';
 
 const CDN_THREE = 'https://cdn.jsdelivr.net/npm/three@0.169.0';
 const PRECACHE = [
@@ -29,6 +29,7 @@ const PRECACHE = [
   `${CDN_THREE}/examples/jsm/controls/OrbitControls.js`,
   `${CDN_THREE}/examples/jsm/environments/RoomEnvironment.js`,
   `${CDN_THREE}/examples/jsm/loaders/GLTFLoader.js`,
+  `${CDN_THREE}/examples/jsm/libs/meshopt_decoder.module.js`,
   `${CDN_THREE}/examples/jsm/utils/BufferGeometryUtils.js`,
   'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js',
   'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js',

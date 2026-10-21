@@ -2,8 +2,12 @@ import { MODEL_PATH, WATCH_PARTS, OPTIONAL_PARTS } from '../config.js';
 import { buildProceduralWatch } from './proceduralWatch.js';
 
 async function loadGltf(path) {
-  const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
-  const gltf = await new GLTFLoader().loadAsync(path);
+  const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([
+    import('three/addons/loaders/GLTFLoader.js'),
+    import('three/addons/libs/meshopt_decoder.module.js'),
+  ]);
+  // Saved versions are compressed with EXT_meshopt_compression (geometry) and EXT_texture_webp
+  const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(path);
   gltf.scene.traverse((obj) => {
     if (obj.isMesh) obj.castShadow = obj.receiveShadow = true;
     // glTF has no visibility flag; saved versions mark hidden strap variants in extras

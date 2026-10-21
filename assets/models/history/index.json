@@ -4,7 +4,7 @@
     "file": "v001.glb",
     "date": "2026-10-19T12:15:59.756Z",
     "note": "Ausgangsdesign: Roségold 41 mm, Sonnenschliff-Zifferblatt, Gliederband, Lederband-Variante, Saphirboden mit Rotor",
-    "bytes": 1583972,
+    "bytes": 700816,
     "thumb": "v001.webp"
   },
   {
@@ -12,7 +12,7 @@
     "file": "v002.glb",
     "date": "2026-10-19T12:18:41.814Z",
     "note": "Saphirglas entspiegelt: deutlich weniger Reflexion und Blendung, dezenter Beschichtungsschimmer",
-    "bytes": 1583488,
+    "bytes": 698812,
     "thumb": "v002.webp"
   },
   {
@@ -20,7 +20,7 @@
     "file": "v003.glb",
     "date": "2026-10-19T12:20:47.386Z",
     "note": "Glas fast unsichtbar: ohne Transmission, nur leichte Randspiegelung; Zifferblatt-Klarlack reduziert",
-    "bytes": 1584248,
+    "bytes": 701992,
     "thumb": "v003.webp"
   },
   {
@@ -28,7 +28,7 @@
     "file": "v004.glb",
     "date": "2026-10-19T12:55:48.848Z",
     "note": "Gelbgold-Gehäuse; aufgesetztes 3D-Logo K «Brillant gefasst» (Fassung Gehäusemetall, Stein Diamant) statt gedrucktem Rhombus",
-    "bytes": 1584052,
+    "bytes": 701300,
     "thumb": "v004.webp"
   },
   {
@@ -36,7 +36,7 @@
     "file": "v005.glb",
     "date": "2026-10-19T13:18:58.669Z",
     "note": "Logo K: Lücken im Brillantschliff mit Rundistenfacetten geschlossen; Stein sitzt bündig in der Fassung",
-    "bytes": 1586292,
+    "bytes": 703060,
     "thumb": "v005.webp"
   },
   {
@@ -44,7 +44,7 @@
     "file": "v006.glb",
     "date": "2026-10-19T13:38:21.484Z",
     "note": "Fotorealistische Überarbeitung: Studio-Licht mit Softboxen, PBR-Gold ohne Klarlack (poliert/gebürstet, Mikrokratzer), Fasen an Gehäuse und Lünette, geriffelte Krone, gewölbtes Saphirglas, profilierte Glieder mit Gelenkstiften, facettierte Indizes und Dauphine-Zeiger, 85-mm-Kamera; optimiert auf unter 2 MB",
-    "bytes": 1751384,
+    "bytes": 759380,
     "thumb": "v006.webp"
   },
   {
@@ -52,7 +52,7 @@
     "file": "v007.glb",
     "date": "2026-10-19T13:46:35.060Z",
     "note": "Ein breiterer Index bei 12 statt Doppelindex (Indizes nach echter Bauweise: appliziert, diamantiert, Aussenkanten auf einem Kreis); Faltschliesse entlang der Bandkurve gebogen und bündig; Krone 5 mm, näher am Gehäuse",
-    "bytes": 1751268,
+    "bytes": 759228,
     "thumb": "v007.webp"
   },
   {
@@ -60,7 +60,7 @@
     "file": "v008.glb",
     "date": "2026-10-19T13:54:46.958Z",
     "note": "Kristall-Logo bei 12 statt Index (grösser, 4 mm), alle übrigen Indizes gleich gross; echte Faltschliesse gerade und flach (gebürsteter Körper, polierter Deckel mit Kristall, Öffnungslasche, Scharniere); Band unten abgeflacht wie ein Handgelenk",
-    "bytes": 1753536,
+    "bytes": 757608,
     "thumb": "v008.webp"
   },
   {
@@ -68,7 +68,7 @@
     "file": "v009.glb",
     "date": "2026-10-19T14:01:54.994Z",
     "note": "Armband für ein 18,5-cm-Handgelenk ausgelegt (Innenumfang ~190 mm statt ~172 mm); Bandanstoss-Abstand 51,9 mm = ~88 % der Handgelenkbreite",
-    "bytes": 1754504,
+    "bytes": 759356,
     "thumb": "v009.webp"
   }
 ]
