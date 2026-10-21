@@ -364,6 +364,8 @@ main { overflow-x: clip; }
 .footer-grid a:not(.brand):hover { color: var(--text); }
 .footer-note { margin: 1rem 0 0; max-width: 22rem; }
 .footer-copy { margin-top: 3rem; font-size: 0.75rem; }
+.footer-copy .footer-author { white-space: nowrap; color: var(--gold-soft); text-decoration: none; border-bottom: 1px solid var(--line); transition: border-color 0.2s; }
+.footer-copy .footer-author:hover { border-color: var(--gold); }
 
 /* Version history page */
 .history { min-height: 100svh; padding-top: var(--header-h); }
