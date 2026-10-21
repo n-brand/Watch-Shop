@@ -16,6 +16,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500&display=swap">
   <link rel="stylesheet" href="css/styles.css">
 
@@ -27,6 +28,8 @@
     }
   }
   </script>
+  <!-- Fetch three.js right away instead of after the page script has been parsed -->
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.min.js" crossorigin>
   <script type="module" src="js/history/history.js"></script>
 </head>
 <body class="history-page">

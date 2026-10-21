@@ -15,6 +15,7 @@
   <meta name="apple-mobile-web-app-title" content="Orvane">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500&display=swap">
   <link rel="stylesheet" href="css/styles.css">
   <script type="importmap">
@@ -25,6 +26,8 @@
     }
   }
   </script>
+  <!-- Fetch three.js right away instead of after the page script has been parsed -->
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.min.js" crossorigin>
   <style>
     .logos { max-width: 90rem; margin: 0 auto; padding: calc(var(--header-h) + 3rem) var(--gutter) 6rem; }
     .logos h1 { font-size: clamp(2.6rem, 6vw, 4rem); margin-bottom: 0.25rem; }

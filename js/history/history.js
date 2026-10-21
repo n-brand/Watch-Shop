@@ -80,6 +80,15 @@ async function showDetail(index) {
     await viewer.setModel(path);
   }
   if (currentIndex === index) $('detail-loading').hidden = true;
+  // Warm the cache for the neighbours, so stepping with the arrows doesn't wait for the network
+  for (const n of [next, prev]) if (n) prefetch(`${HISTORY_URL}${n.file}`);
+}
+
+const prefetched = new Set();
+function prefetch(url) {
+  if (prefetched.has(url)) return;
+  prefetched.add(url);
+  fetch(url, { priority: 'low' }).then((res) => res.arrayBuffer()).catch(() => prefetched.delete(url));
 }
 
 function showGrid() {
