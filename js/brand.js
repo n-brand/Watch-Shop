@@ -68,37 +68,9 @@ prefersLight.addEventListener('change', () => {
   renderFavicon();
 });
 
-// Mobile menu: the nav folds into a full-width panel below the header
-function initMenu() {
-  const toggle = document.querySelector('.nav-toggle');
-  const header = document.querySelector('.site-header');
-  if (!toggle || !header) return;
-  const setOpen = (open) => {
-    header.classList.toggle('nav-open', open);
-    toggle.setAttribute('aria-expanded', String(open));
-    toggle.setAttribute('aria-label', open ? 'Menü schliessen' : 'Menü öffnen');
-    document.documentElement.classList.toggle('no-scroll', open);
-  };
-  toggle.addEventListener('click', () => setOpen(!header.classList.contains('nav-open')));
-  document.getElementById('site-nav')?.addEventListener('click', (e) => {
-    if (e.target.closest('a')) setOpen(false);
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && header.classList.contains('nav-open')) {
-      setOpen(false);
-      toggle.focus();
-    }
-  });
-  // Back to desktop width: the sidebar nav is always visible, so drop the open state
-  window.matchMedia('(min-width: 861px)').addEventListener('change', (e) => {
-    if (e.matches) setOpen(false);
-  });
-}
-
 renderLogos();
 renderToggles();
 renderFavicon();
-initMenu();
 
 // Offline support / installable app (PWA); localhost counts as a secure context.
 // sw.js is resolved relative to this module, so the site also works in a sub-folder (GitHub Pages).
