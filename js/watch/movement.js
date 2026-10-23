@@ -582,12 +582,14 @@ function arbor(m, zFront, zBack, r = 0.12) {
 // ---------------------------------------------------------------- assemblies
 
 // Pockets cut into the main plate around every moving part; they go down to the base plate
-const R = { center: 3.6, third: 2.9, fourth: 2.4, escape: 1.5, barrel: 4.2, balance: 2.05, reverser: 2.0, reduction: 1.4, idler: 1.1 };
+const R = { center: 3.6, third: 2.9, fourth: 2.4, escape: 1.5, barrel: 4.2, balance: 2.05, reverser: 2.0, reduction: 1.2, idler: 1.1 };
+// Bridge feet sit fully on the plate: their screws must clear every pocket and the casing ring
+const BARREL_FEET = [v2(-9.3, 0.6), v2(-7.38, -2.15)];
 // Automatic winding wheels in the upper right: a reversing wheel with a reduction wheel and an idler meshing
 // with it (0.14 mm tooth overlap); the idler runs under the automatic bridge, the reduction wheel under its cock
 POS.reverser = v2(5.2, 3.0);
 const meshWith = (pos, r, dir, rOther) => pos.clone().add(dir.normalize().multiplyScalar(r + rOther - 0.14));
-POS.reduction = meshWith(POS.reverser, R.reverser, v2(0.75, 0.66), R.reduction);
+POS.reduction = meshWith(POS.reverser, R.reverser, v2(0.62, 0.78), R.reduction);
 POS.idler = meshWith(POS.reverser, R.reverser, v2(-0.35, 0.94), R.idler);
 const pockets = sdf.smoothUnion(0.6,
   sdf.circle(POS.reverser, R.reverser + 0.3),
@@ -710,16 +712,16 @@ function buildBarrel(m, wCenter) {
 
   // Cross bridge over the barrel: two arms crossing at the barrel arbor, plus an arm to the crown wheel
   const field = sdf.smoothUnion(0.7,
-    sdf.capsule(v2(-8.75, 4.1), v2(-0.6, 0.9), 0.75),
-    sdf.capsule(v2(-6.9, -1.4), v2(-2.2, 6.6), 0.75),
+    sdf.capsule(BARREL_FEET[0], v2(-0.76, 3.59), 0.75),
+    sdf.capsule(BARREL_FEET[1], v2(-2.2, 6.6), 0.75),
     sdf.circle(POS.barrel, 1.25),
     sdf.capsule(POS.barrel, POS.crown, 0.8),
     sdf.circle(POS.crown, 0.95),
-    sdf.circle(v2(-8.75, 4.1), 0.8),
-    sdf.circle(v2(-6.7, -1.2), 0.95),
+    sdf.circle(BARREL_FEET[0], 0.8),
+    sdf.circle(BARREL_FEET[1], 0.95),
   );
-  group.add(bridge(m, field, bounds(-11.2, -3, 1, 9, 0.04), Z.bridgeBottom, Z.bridgeTop, {
-    name: 'BarrelBridge', screws: [{ x: -8.75, y: 4.1, angle: 0.3 }, { x: -6.7, y: -1.2, angle: 1.9 }],
+  group.add(bridge(m, field, bounds(-11.2, -3.6, 1, 9, 0.04), Z.bridgeBottom, Z.bridgeTop, {
+    name: 'BarrelBridge', screws: [{ x: BARREL_FEET[0].x, y: BARREL_FEET[0].y, angle: 0.3 }, { x: BARREL_FEET[1].x, y: BARREL_FEET[1].y, angle: 1.9 }],
   }));
 
   // Large ratchet wheel with six spokes on top: satin steel, polished bevel; the bridge shows between its spokes.
@@ -747,7 +749,7 @@ function buildBarrel(m, wCenter) {
   group.add(crown);
 
   // Click: the pawl that keeps the ratchet from unwinding; it pivots on the bridge arm just outside the ratchet
-  const toFoot = v2(-8.75, 4.1).sub(POS.barrel).normalize();
+  const toFoot = BARREL_FEET[0].clone().sub(POS.barrel).normalize();
   const clickAt = POS.barrel.clone().addScaledVector(toFoot, RATCHET_R + 0.75);
   const tip = POS.barrel.clone().addScaledVector(toFoot.clone().rotateAround(v2(0, 0), 0.22), RATCHET_R - 0.08);
   for (const shape of shapeFromSdf(sdf.smoothUnion(0.3, sdf.capsule(clickAt, tip, 0.22), sdf.circle(clickAt, 0.45)),
@@ -805,7 +807,7 @@ function buildWindingTrain(m) {
     group.add(a);
   }
   // Winding cock: one arm from a foot near the rim over the reduction wheel, with its jewel
-  const foot = v2(9.0, 3.2);
+  const foot = v2(8.9, 2.6);
   const field = sdf.smoothUnion(0.6, sdf.capsule(foot, POS.reduction, 0.55), sdf.circle(POS.reduction, 0.8), sdf.circle(foot, 0.85));
   group.add(bridge(m, field, bounds(5.5, 1.5, 10.6, 7.2, 0.04), Z.bridgeBottom, Z.bridgeTop, {
     name: 'WindingCock', screws: [{ x: foot.x, y: foot.y, angle: 2.6 }],
@@ -865,9 +867,9 @@ function buildBalance(m) {
 
   // Balance cock: one-armed bridge from its foot near the rim to the balance staff, standing taller than
   // the other bridges; cap jewel over the staff, foot screw near the rim
-  const foot = v2(-6.55, -7.0);
+  const foot = v2(-8.2, -4.5); // on the plate beside the balance pocket, not over its edge
   const field = sdf.smoothUnion(0.8, sdf.capsule(foot, POS.balance, 0.62), sdf.circle(POS.balance, 0.95), sdf.circle(foot, 0.85));
-  group.add(bridge(m, field, bounds(-11.2, -11.2, -3, -4, 0.04), Z.bridgeBottom, Z.cockTop, {
+  group.add(bridge(m, field, bounds(-11.2, -11.2, -3, -3, 0.04), Z.bridgeBottom, Z.cockTop, {
     name: 'BalanceCock', bevel: 0.14, screws: [{ x: foot.x, y: foot.y, angle: 0.9 }],
   }));
   group.add(jewel(m, POS.balance.x, POS.balance.y, Z.cockTop, 1.1));

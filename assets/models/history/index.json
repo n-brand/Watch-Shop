@@ -223,5 +223,14 @@
     "note": "Meridian: drei Räder des automatischen Aufzugs (Wechselrad, Reduktionsrad unter eigenem Kloben mit Lagerstein, Zwischenrad unter der Automatikbrücke), halb verdeckt von Brücken und Rotor; Armband wird beim Heranzoomen auf die Rückseite durchsichtig",
     "bytes": 2551888,
     "thumb": "v026.webp"
+  },
+  {
+    "id": "v027",
+    "model": "meridian",
+    "file": "v027.glb",
+    "date": "2026-10-23T21:33:58.925Z",
+    "note": "Meridian: Brückenfüsse von Unruhkloben und Federhausbrücke ganz auf die Platine verlegt (Schrauben sassen halb über Aussparungen), Reduktionsrad kleiner und weiter innen (ragte bis an den Werkhaltering)",
+    "bytes": 2552252,
+    "thumb": "v027.webp"
   }
 ]
