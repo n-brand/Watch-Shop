@@ -150,7 +150,8 @@ function rotorEngraving(radius) {
     ctx.font = `500 ${0.7 * scale}px "Inter", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const text = 'ORVANE  ·  AUTOMATIC  ·  OR-01';
+    // Designer credit on the rotor rim, as watchmakers sign their movements
+    const text = 'ORVANE  ·  AUTOMATIC  ·  OR-01  ·  DESIGN NICOLAS BRAND';
     const r = 9.68 * scale;
     const spacing = (0.48 * scale) / r;
     const start = -Math.PI / 2 - ((text.length - 1) * spacing) / 2;

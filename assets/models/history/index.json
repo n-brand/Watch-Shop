@@ -142,5 +142,23 @@
     "note": "Meridian: Uhrwerk durchbrochen nach Vorbild offener Manufakturwerke – skelettierte Platine mit tiefen Taschen bis zur Grundplatte, Räder auf mehreren Ebenen, dicke Ruthenium-Brücken (sandgestrahlt) mit breiten polierten Fasen und Gravuren, grosses Sperrrad mit sechs Speichen auf Kreuzbrücke, Klinke, durchbrochener Goldrotor mit drei Speichen und graviertem Rand",
     "bytes": 4828996,
     "thumb": "v017.webp"
+  },
+  {
+    "id": "v018",
+    "model": "meridian",
+    "file": "v018.glb",
+    "date": "2026-10-23T13:13:50.706Z",
+    "note": "Meridian: Zifferblatt Königsblau, Zeiger tiefer über dem Zifferblatt mit Stunden-, Minuten- und Sekundenrohr (geschlossener Zeigerstapel, kein Durchblick darunter), Rotor-Gravur mit «DESIGN NICOLAS BRAND»",
+    "bytes": 4849704,
+    "thumb": "v018.webp"
+  },
+  {
+    "id": "v019",
+    "model": "lumen",
+    "file": "v019.glb",
+    "date": "2026-10-23T13:14:19.646Z",
+    "note": "Lumen: Gravur «DESIGN NICOLAS BRAND» auf dem Gehäuseboden",
+    "bytes": 3155080,
+    "thumb": "v019.webp"
   }
 ]

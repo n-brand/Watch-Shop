@@ -272,6 +272,10 @@ function engravingTexture(hw, hh) {
   ctx.letterSpacing = '12px';
   ctx.fillText('REF. OL-01', 6, 50);
   ctx.fillText('N° 0001', 6, 100);
+  // Designer credit
+  ctx.font = '400 28px "Inter", sans-serif';
+  ctx.letterSpacing = '7px';
+  ctx.fillText('DESIGN NICOLAS BRAND', 4, 170);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;

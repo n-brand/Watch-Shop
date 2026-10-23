@@ -241,11 +241,20 @@ function hub(radius, height, metal) {
   return mesh;
 }
 
-function buildHand(name, geometry, z, metal, hubRadius, hubHeight) {
+// pipe: { radius, down } adds the pipe the hand sits on, reaching `down` mm below the hand to the dial or to
+// the hand underneath (hour pipe, minute pipe, seconds arbor nest inside each other), so the hand stack is
+// closed in the centre and nothing can be seen through underneath the hands
+function buildHand(name, geometry, z, metal, hubRadius, hubHeight, pipe) {
   const pivot = new THREE.Group();
   pivot.name = name;
   pivot.position.z = z;
   pivot.add(shadowed(new THREE.Mesh(geometry, metal)), hub(hubRadius, hubHeight, metal));
+  if (pipe) {
+    const tube = shadowed(new THREE.Mesh(assignWorldUVs(new THREE.CylinderGeometry(pipe.radius, pipe.radius, pipe.down, 40)), metal));
+    tube.rotation.x = Math.PI / 2;
+    tube.position.z = -pipe.down / 2;
+    pivot.add(tube);
+  }
   return pivot;
 }
 
@@ -257,7 +266,7 @@ function buildSecondHand(metal) {
   shape.lineTo(-0.07, 16.2);
   shape.closePath();
   const geo = assignWorldUVs(new THREE.ExtrudeGeometry(shape, { depth: 0.07, bevelEnabled: false }));
-  const hand = buildHand(WATCH_PARTS.secondHand, geo, DIAL_Z + 1.24, metal, 0.42, 0.1);
+  const hand = buildHand(WATCH_PARTS.secondHand, geo, DIAL_Z + 0.84, metal, 0.42, 0.1, { radius: 0.22, down: 0.08 });
   const weight = shadowed(new THREE.Mesh(assignWorldUVs(new THREE.CylinderGeometry(0.85, 0.85, 0.08, 40)), metal));
   weight.rotation.x = Math.PI / 2;
   weight.position.set(0, -3.1, 0.04);
@@ -669,8 +678,9 @@ export async function buildProceduralWatch({ metal = METALS.yellowGold } = {}) {
     buildBezel(polished),
     buildCrown(polished),
     buildDial(dialTexture, polished),
-    buildHand(WATCH_PARTS.hourHand, dauphineGeometry(10.2, 1.55, 1.5, 0.2), DIAL_Z + 0.72, polished, 1.15, 0.24),
-    buildHand(WATCH_PARTS.minuteHand, dauphineGeometry(15.4, 1.25, 1.7, 0.18), DIAL_Z + 0.98, polished, 0.85, 0.22),
+    // Hands sit low over the dial (hour 0.32, minute 0.58, seconds 0.84 mm), above the 0.44 mm indices
+    buildHand(WATCH_PARTS.hourHand, dauphineGeometry(10.2, 1.55, 1.5, 0.2), DIAL_Z + 0.32, polished, 1.15, 0.22, { radius: 0.95, down: 0.32 }),
+    buildHand(WATCH_PARTS.minuteHand, dauphineGeometry(15.4, 1.25, 1.7, 0.18), DIAL_Z + 0.58, polished, 0.85, 0.2, { radius: 0.62, down: 0.06 }),
     buildSecondHand(polished),
     buildGlass(),
     buildCaseback(),
