@@ -29,10 +29,31 @@
     .test-info ul { margin: 0; padding-left: 1.1rem; font-size: 0.85rem; color: var(--text-muted); }
     .test-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: auto; }
     .test-actions .button { padding: 0.65rem 1rem; font-size: 0.7rem; }
+    .test-card + .test-card { margin-top: 2rem; }
+    .test-actions .button[aria-pressed="true"] { background: var(--gold); color: var(--bg); }
     @media (max-width: 860px) {
       .test-card { grid-template-columns: 1fr; }
       .test-info { border-left: 0; border-top: 1px solid var(--line); }
     }
+
+    /* ---------------------------------------------------------------- 2D gear train (Test 02)
+       Drawn in millimetres (viewBox), built by the script below. Fixed colours like the real metals. */
+    .train { width: min(100%, 34rem); height: auto; display: block; overflow: visible; }
+    @media (min-width: 861px) { .train-card { grid-template-columns: minmax(0, 1.5fr) minmax(16rem, 22rem); } }
+    .train-card .test-stage { padding: clamp(1rem, 3vw, 2.5rem); }
+    .train .plate { fill: url(#perlage); stroke: #5d636b; stroke-width: 0.12; }
+    .train .gilt { fill: url(#gilt); stroke: #8a6a2c; stroke-width: 0.04; fill-rule: evenodd; }
+    .train .steel { fill: url(#steel); stroke: #6b7178; stroke-width: 0.03; fill-rule: evenodd; }
+    .train .blued { fill: #2a4a9a; }
+    .train .ruby { fill: #9b1730; }
+    .train .chaton { fill: #e0bd73; stroke: #8a6a2c; stroke-width: 0.03; }
+    .train .spring { fill: none; stroke: #3a5fb8; stroke-width: 0.045; opacity: 0.85; }
+    .train .shadow { filter: drop-shadow(0.12px 0.18px 0.12px rgb(0 0 0 / 0.55)); }
+    .train .labels { opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .train[data-labels] .labels { opacity: 1; }
+    .train .labels text { font: 500 0.78px 'Inter', sans-serif; fill: #f6efe3; paint-order: stroke; stroke: rgb(0 0 0 / 0.75); stroke-width: 0.22; }
+    .train .labels line { stroke: #f6efe3; stroke-width: 0.05; }
+    .train-speed { font-size: 0.75rem; color: var(--text-muted); }
 
     /* ---------------------------------------------------------------- CSS display of the Lumen
        Everything scales with the panel width (container query units), like the 28 x 29.8 mm panel of the 3D watch.
@@ -219,10 +240,309 @@
         </div>
       </div>
     </article>
+
+    <article class="test-card train-card" aria-labelledby="train-title">
+      <div class="test-stage">
+        <svg class="train" id="train" viewBox="-14.5 -14.5 29 29" role="img" aria-labelledby="train-title train-desc"></svg>
+      </div>
+      <div class="test-info">
+        <p class="eyebrow">Test 02</p>
+        <h2 id="train-title">Räderwerk in 2D</h2>
+        <p id="train-desc">Ein Schweizer Ankerwerk von oben, als SVG gezeichnet und in Echtzeit bewegt: Die Unruh schwingt mit 4 Hz und gibt das Räderwerk achtmal pro Sekunde einen Schritt frei.</p>
+        <ul>
+          <li>Kraftfluss: Federhaus → Minutenrad → Kleinbodenrad → Sekundenrad → Ankerrad → Anker → Unruh</li>
+          <li>Jedes Rad greift in den kleinen Trieb des nächsten; Übersetzungen 96:12, 64:10, 75:8, 96:6</li>
+          <li>Sekundenrad 1 U/min, Ankerrad mit 15 Kolbenzähnen, Unruh 28'800 A/h mit ±270°</li>
+        </ul>
+        <p class="train-speed" id="train-speed" aria-live="polite">Echtzeit</p>
+        <div class="test-actions">
+          <button class="button" type="button" data-slow aria-pressed="false">Zeitlupe</button>
+          <button class="button" type="button" data-labels aria-pressed="false">Beschriftung</button>
+        </div>
+      </div>
+    </article>
   </div>
   </main>
 
   <script type="module" src="js/tests/css-clock.js"></script>
+  <script type="module">
+    // Test 02: gear train of a Swiss lever movement, top view, in millimetres.
+    // Every wheel meshes with the next arbor's pinion: centre distance = module × (teeth + leaves) / 2.
+    // All arbors are driven from the escapement, so the whole train ticks 8 times a second like the real thing.
+    const svg = document.getElementById('train');
+    const NS = 'http://www.w3.org/2000/svg';
+    const TAU = Math.PI * 2;
+    const el = (name, attrs = {}, parent) => {
+      const node = document.createElementNS(NS, name);
+      for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+      parent?.append(node);
+      return node;
+    };
+    const f = (v) => +v.toFixed(3);
+    const polar = (r, a) => [f(Math.cos(a) * r), f(Math.sin(a) * r)];
+
+    // Toothed outline (wheel or pinion leaves) plus spoke windows, as one evenodd path
+    function gearPath(z, m, { add = 1, ded = 1.3, root = 0.56, tip = 0.2, spokes = 0, hub = 0.5, rim = 0.35, spokeW = 0.24 } = {}) {
+      const R = (m * z) / 2;
+      const Ra = R + m * add;
+      const Rf = R - m * ded;
+      const p = TAU / z;
+      let d = '';
+      for (let i = 0; i < z; i++) {
+        const a = i * p; // tooth centred on a
+        const pts = [
+          polar(Rf, a - p / 2), polar(Rf, a - (root * p) / 2), polar(R, a - ((root + tip) * p) / 4),
+          polar(Ra * 0.985, a - (tip * p) / 2), polar(Ra, a), polar(Ra * 0.985, a + (tip * p) / 2),
+          polar(R, a + ((root + tip) * p) / 4), polar(Rf, a + (root * p) / 2),
+        ];
+        d += pts.map(([x, y], k) => `${i === 0 && k === 0 ? 'M' : 'L'}${x} ${y}`).join('');
+      }
+      d += 'Z';
+      if (spokes) {
+        const outer = Rf - rim;
+        for (let k = 0; k < spokes; k++) {
+          const a0 = (k / spokes) * TAU;
+          const a1 = ((k + 1) / spokes) * TAU;
+          const h = spokeW / 2;
+          const [x1, y1] = polar(hub, a0 + h / hub);
+          const [x2, y2] = polar(outer, a0 + h / outer);
+          const [x3, y3] = polar(outer, a1 - h / outer);
+          const [x4, y4] = polar(hub, a1 - h / hub);
+          const large = a1 - a0 - (2 * h) / outer > Math.PI ? 1 : 0;
+          d += `M${x1} ${y1}L${x2} ${y2}A${f(outer)} ${f(outer)} 0 ${large} 1 ${x3} ${y3}L${x4} ${y4}A${f(hub)} ${f(hub)} 0 0 0 ${x1} ${y1}Z`;
+        }
+      }
+      return d;
+    }
+
+    // Defs: gilt and steel gradients, perlage (overlapping circular graining) on the main plate
+    const defs = el('defs', {}, svg);
+    const grad = (id, stops, attrs = {}) => {
+      const g = el('linearGradient', { id, x1: 0, y1: 0, x2: 1, y2: 1, ...attrs }, defs);
+      stops.forEach(([o, c]) => el('stop', { offset: o, 'stop-color': c }, g));
+    };
+    grad('gilt', [[0, '#f3dca2'], [0.45, '#d4ad62'], [1, '#a9843f']]);
+    grad('steel', [[0, '#eef0f3'], [0.5, '#b9bec5'], [1, '#868c94']]);
+    const perl = el('pattern', { id: 'perlage', width: 1.1, height: 0.95, patternUnits: 'userSpaceOnUse' }, defs);
+    el('rect', { width: 1.1, height: 0.95, fill: '#9aa0a8' }, perl);
+    for (const [cx, cy] of [[0, 0], [1.1, 0], [0.55, 0.475], [0, 0.95], [1.1, 0.95]]) {
+      const rg = el('radialGradient', { id: `pg${cx}${cy}`.replace(/\./g, '') }, defs);
+      el('stop', { offset: 0, 'stop-color': '#c4c9cf' }, rg);
+      el('stop', { offset: 0.7, 'stop-color': '#9aa0a8' }, rg);
+      el('stop', { offset: 1, 'stop-color': '#7d838b' }, rg);
+      el('circle', { cx, cy, r: 0.62, fill: `url(#${rg.id})`, opacity: 0.85 }, perl);
+    }
+
+    el('circle', { class: 'plate', r: 13 }, svg);
+    const layer = el('g', { class: 'shadow' }, svg);
+
+    // Arbors (positions in mm). Mesh angle phi: direction from the driving wheel to the driven pinion.
+    const at = (from, dist, deg) => [from[0] + Math.cos((deg * Math.PI) / 180) * dist, from[1] + Math.sin((deg * Math.PI) / 180) * dist];
+    // Sizes of a ~26 mm calibre: barrel ~11 mm, wheels 7–8 mm, escape wheel 4 mm, balance ~8.4 mm.
+    // Layout found by a small search for the best clearance inside the plate; as in real movements the wheels
+    // overlap a little, on different levels.
+    const MOD = { barrel: 0.11, center: 0.12, third: 0.095, fourth: 0.07 };
+    const ESC_R = 2.0;
+    const BAL_R = 4.2;
+    const CENTER = [-2, -3];
+    const BARREL = at(CENTER, MOD.barrel * (96 + 12) / 2, 150);
+    const THIRD = at(CENTER, MOD.center * (64 + 10) / 2, -10);
+    const FOURTH = at(THIRD, MOD.third * (75 + 8) / 2, 80);
+    const ESCAPE = at(FOURTH, MOD.fourth * (96 + 6) / 2, 140);
+    const PALLET = at(ESCAPE, 2.6, 90);
+    const BALANCE = at(PALLET, 3.3, 90);
+
+    // ratio: how many turns this arbor makes per escape-wheel turn (sign = direction)
+    const arbors = {
+      barrel: { pos: BARREL, ratio: -(6 / 96) * (8 / 75) * (10 / 64) * (12 / 96) },
+      center: { pos: CENTER, ratio: (6 / 96) * (8 / 75) * (10 / 64) },
+      third: { pos: THIRD, ratio: -(6 / 96) * (8 / 75) },
+      fourth: { pos: FOURTH, ratio: 6 / 96 },
+      escape: { pos: ESCAPE, ratio: -1 },
+    };
+    for (const a of Object.values(arbors)) {
+      a.g = el('g', { transform: `translate(${f(a.pos[0])} ${f(a.pos[1])})` }, layer);
+      a.rot = el('g', {}, a.g);
+    }
+    const angleTo = (from, to) => Math.atan2(to[1] - from[1], to[0] - from[0]);
+    // A wheel shows a tooth towards its pinion; the pinion shows a gap back towards the wheel
+    const addGear = (arbor, d, cls, offset) => el('path', { d, class: cls, transform: `rotate(${f((offset * 180) / Math.PI)})` }, arbor.rot);
+    function mesh(wheelArbor, z, m, pinionArbor, zp, wheelOpts) {
+      const phi = angleTo(wheelArbor.pos, pinionArbor.pos);
+      addGear(wheelArbor, gearPath(z, m, wheelOpts), 'gilt', phi);
+      addGear(pinionArbor, gearPath(zp, m, { add: 0.9, ded: 1.7, root: 0.5, tip: 0.3 }), 'steel', phi + Math.PI + Math.PI / zp);
+    }
+    // Draw order: lower wheels first (barrel, centre), the escapement on top
+    mesh(arbors.barrel, 96, MOD.barrel, arbors.center, 12, { spokes: 0 });
+    // Ratchet wheel and screw on the barrel arbor
+    let ratchet = '';
+    for (let i = 0; i < 36; i++) {
+      const a = (i / 36) * TAU;
+      const [x1, y1] = polar(3.2, a);
+      const [x2, y2] = polar(3.65, a + (TAU / 36) * 0.85);
+      const [x3, y3] = polar(3.2, a + (TAU / 36) * 0.9);
+      ratchet += `${i ? 'L' : 'M'}${x1} ${y1}L${x2} ${y2}L${x3} ${y3}`;
+    }
+    el('path', { d: `${ratchet}Z`, class: 'steel' }, arbors.barrel.rot);
+    el('circle', { r: 0.7, class: 'blued' }, arbors.barrel.rot);
+    el('rect', { x: -0.62, y: -0.07, width: 1.24, height: 0.14, fill: '#0f1d40' }, arbors.barrel.rot);
+    mesh(arbors.center, 64, MOD.center, arbors.third, 10, { spokes: 4, hub: 0.6 });
+    mesh(arbors.third, 75, MOD.third, arbors.fourth, 8, { spokes: 4, hub: 0.5 });
+    mesh(arbors.fourth, 96, MOD.fourth, arbors.escape, 6, { spokes: 4, hub: 0.45, rim: 0.3 });
+    // Swiss club-tooth escape wheel (slanted locking face, short impulse face at the tip), a tooth facing the pallets
+    const escPhi = angleTo(ESCAPE, PALLET);
+    const escD = (() => {
+      const r = ESC_R;
+      const z = 15;
+      const p = TAU / z;
+      let d = '';
+      for (let i = 0; i < z; i++) {
+        const a = i * p;
+        const pts = [polar(r * 0.66, a - p * 0.5), polar(r * 0.92, a - p * 0.12), polar(r, a), polar(r * 0.95, a + p * 0.16), polar(r * 0.66, a + p * 0.12)];
+        d += pts.map(([x, y], k) => `${i === 0 && k === 0 ? 'M' : 'L'}${x} ${y}`).join('');
+      }
+      // three spoke windows
+      d += 'Z';
+      for (let k = 0; k < 3; k++) {
+        const a0 = (k / 3) * TAU + 0.18;
+        const a1 = ((k + 1) / 3) * TAU - 0.18;
+        const [x1, y1] = polar(0.38, a0 + 0.25);
+        const [x2, y2] = polar(1.05, a0);
+        const [x3, y3] = polar(1.05, a1);
+        const [x4, y4] = polar(0.38, a1 - 0.25);
+        d += `M${x1} ${y1}L${x2} ${y2}A1.05 1.05 0 0 1 ${x3} ${y3}L${x4} ${y4}A0.38 0.38 0 0 0 ${x1} ${y1}Z`;
+      }
+      return d;
+    })();
+    addGear(arbors.escape, escD, 'steel', escPhi);
+
+    // Pallet lever: arms with the entry and exit stones over the escape wheel, fork towards the balance roller
+    const lever = el('g', { transform: `translate(${f(PALLET[0])} ${f(PALLET[1])})` }, layer);
+    const leverRot = el('g', {}, lever);
+    const leverAngle = angleTo(PALLET, BALANCE);
+    const leverBody = el('g', { transform: `rotate(${f((leverAngle * 180) / Math.PI)})` }, leverRot);
+    // Local frame: +x towards the balance, the escape wheel centre at x = -2.6. The pallet stones embrace
+    // 2½ teeth (±30° on the wheel), so they sit on its tip circle and point at its centre.
+    const escLocal = [-2.6, 0];
+    const stones = [-1, 1].map((side) => [escLocal[0] + Math.cos(Math.PI / 6) * ESC_R, side * Math.sin(Math.PI / 6) * ESC_R]);
+    el('path', { d: 'M-0.95 -1.15 L-0.15 -0.25 L2.2 -0.14 L2.45 -0.34 L2.62 -0.12 L2.62 0.12 L2.45 0.34 L2.2 0.14 L-0.15 0.25 L-0.95 1.15 L-1.2 0.92 L-0.42 0 L-1.2 -0.92 Z', class: 'steel' }, leverBody);
+    for (const [sx, sy] of stones) {
+      const deg = (Math.atan2(escLocal[1] - sy, escLocal[0] - sx) * 180) / Math.PI;
+      el('rect', { x: f(sx - 0.24), y: f(sy - 0.11), width: 0.48, height: 0.22, class: 'ruby', transform: `rotate(${f(deg)} ${f(sx)} ${f(sy)})` }, leverBody);
+    }
+
+    // Balance: glucydur rim with three arms, roller with the impulse jewel, blued hairspring (breathes as it swings)
+    const balance = el('g', { transform: `translate(${f(BALANCE[0])} ${f(BALANCE[1])})` }, layer);
+    const spring = el('path', { class: 'spring' }, balance);
+    const balRot = el('g', {}, balance);
+    el('path', { d: (() => {
+      const inner = BAL_R - 0.42;
+      let d = `M${BAL_R} 0A${BAL_R} ${BAL_R} 0 1 1 ${-BAL_R} 0A${BAL_R} ${BAL_R} 0 1 1 ${BAL_R} 0Z`;
+      for (let k = 0; k < 3; k++) {
+        const a0 = (k / 3) * TAU + 0.07;
+        const a1 = ((k + 1) / 3) * TAU - 0.07;
+        const [x1, y1] = polar(0.6, a0 + 0.22);
+        const [x2, y2] = polar(inner, a0);
+        const [x3, y3] = polar(inner, a1);
+        const [x4, y4] = polar(0.6, a1 - 0.22);
+        d += `M${x1} ${y1}L${x2} ${y2}A${f(inner)} ${f(inner)} 0 0 1 ${x3} ${y3}L${x4} ${y4}A0.6 0.6 0 0 0 ${x1} ${y1}Z`;
+      }
+      return d;
+    })(), class: 'gilt' }, balRot);
+    // Double roller with the impulse jewel, facing the lever fork when the balance is at rest
+    el('circle', { r: 0.7, class: 'steel' }, balRot);
+    el('circle', { r: 0.13, class: 'ruby', transform: `rotate(${f((leverAngle * 180) / Math.PI + 180)}) translate(0.55 0)` }, balRot);
+    // In a real movement the lever runs below the balance; here it is drawn on top so the escapement stays visible
+    layer.append(lever);
+
+    // Jewels in gold chatons on every arbor (fixed, they sit in the bridges)
+    for (const pos of [CENTER, THIRD, FOURTH, ESCAPE, PALLET, BALANCE]) {
+      el('circle', { cx: f(pos[0]), cy: f(pos[1]), r: 0.42, class: 'chaton' }, svg);
+      el('circle', { cx: f(pos[0]), cy: f(pos[1]), r: 0.24, class: 'ruby' }, svg);
+      el('circle', { cx: f(pos[0] - 0.07), cy: f(pos[1] - 0.07), r: 0.07, fill: '#ffffff', opacity: 0.55 }, svg);
+    }
+
+    // Labels with leader lines
+    const labels = el('g', { class: 'labels' }, svg);
+    const label = (pos, dx, dy, text) => {
+      el('line', { x1: f(pos[0]), y1: f(pos[1]), x2: f(pos[0] + dx), y2: f(pos[1] + dy) }, labels);
+      el('text', { x: f(pos[0] + dx + (dx < 0 ? -0.2 : 0.2)), y: f(pos[1] + dy + 0.28), 'text-anchor': dx < 0 ? 'end' : 'start' }, labels).textContent = text;
+    };
+    label(BARREL, -1.5, -6.2, 'Federhaus');
+    label(CENTER, 1.5, -7.6, 'Minutenrad');
+    label(THIRD, 4.2, -3.2, 'Kleinbodenrad');
+    label(FOURTH, 4.6, -0.6, 'Sekundenrad');
+    label(ESCAPE, 4.3, 0.8, 'Ankerrad');
+    label(PALLET, 4.6, 2.4, 'Anker');
+    label(BALANCE, -5.6, 1.6, 'Unruh');
+
+    // Motion. Balance angle theta = A sin(2 pi f t). Around each zero crossing (the "lift", |theta| < LIFT) the lever
+    // flips and the escape wheel advances half a tooth; between beats everything rests ("locking").
+    const HZ = 4;
+    const AMP = (270 * Math.PI) / 180;
+    const LIFT = 0.45; // rad of balance travel per side in which impulse is given
+    const H = Math.asin(LIFT / AMP) / Math.PI; // half width of the lift window, in beats
+    const smooth = (x) => x * x * (3 - 2 * x);
+    const springPath = (theta) => {
+      // Inner end turns with the balance, outer end is pinned: each turn takes a share of the rotation
+      const turns = 13;
+      let d = '';
+      for (let i = 0; i <= 390; i++) {
+        const k = i / 390;
+        const r = 0.85 + k * 2.3;
+        const a = k * turns * TAU + theta * (1 - k);
+        const [x, y] = polar(r, a);
+        d += `${i ? 'L' : 'M'}${x} ${y}`;
+      }
+      return d;
+    };
+
+    let t = 0;
+    let scale = 1;
+    function draw() {
+      const beats = 2 * HZ * t;
+      const theta = AMP * Math.sin(Math.PI * beats);
+      const k = Math.round(beats);
+      const s = smooth(Math.min(Math.max((beats - k + H) / (2 * H), 0), 1));
+      const steps = k - 1 + s; // half-tooth steps of the escape wheel
+      const escapeTurns = steps / 30;
+      for (const a of Object.values(arbors)) a.rot.setAttribute('transform', `rotate(${f(escapeTurns * a.ratio * 360)})`);
+      leverRot.setAttribute('transform', `rotate(${f(Math.cos(Math.PI * steps) * 8)})`);
+      balRot.setAttribute('transform', `rotate(${f((theta * 180) / Math.PI)})`);
+      spring.setAttribute('d', springPath(theta));
+    }
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let last = performance.now();
+    let visible = true;
+    function frame(now) {
+      t += (Math.min(now - last, 100) / 1000) * scale;
+      last = now;
+      if (visible) draw();
+      requestAnimationFrame(frame);
+    }
+    draw();
+    if (!reduced) {
+      new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(svg);
+      requestAnimationFrame((now) => {
+        last = now;
+        frame(now);
+      });
+    }
+
+    const speed = document.getElementById('train-speed');
+    if (reduced) speed.textContent = 'Stillstand (reduzierte Bewegung ist eingestellt)';
+    document.querySelector('[data-slow]').addEventListener('click', (e) => {
+      scale = scale === 1 ? 0.1 : 1;
+      e.currentTarget.setAttribute('aria-pressed', String(scale !== 1));
+      if (!reduced) speed.textContent = scale === 1 ? 'Echtzeit' : 'Zeitlupe 1:10';
+    });
+    document.querySelector('[data-labels]').addEventListener('click', (e) => {
+      const on = !svg.hasAttribute('data-labels');
+      svg.toggleAttribute('data-labels', on);
+      e.currentTarget.setAttribute('aria-pressed', String(on));
+    });
+  </script>
   <script type="module" src="js/brand.js"></script>
 </body>
 </html>
