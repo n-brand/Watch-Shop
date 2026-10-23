@@ -214,5 +214,14 @@
     "note": "Meridian: Räderwerk läuft 10x schneller, damit Minutenrad (unter 4 min pro Umdrehung) und Kleinbodenrad (35 s) sichtbar drehen; Übersetzung zwischen den Rädern bleibt stimmig",
     "bytes": 2457496,
     "thumb": "v025.webp"
+  },
+  {
+    "id": "v026",
+    "model": "meridian",
+    "file": "v026.glb",
+    "date": "2026-10-23T21:28:55.726Z",
+    "note": "Meridian: drei Räder des automatischen Aufzugs (Wechselrad, Reduktionsrad unter eigenem Kloben mit Lagerstein, Zwischenrad unter der Automatikbrücke), halb verdeckt von Brücken und Rotor; Armband wird beim Heranzoomen auf die Rückseite durchsichtig",
+    "bytes": 2551888,
+    "thumb": "v026.webp"
   }
 ]

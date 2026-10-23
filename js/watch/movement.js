@@ -582,8 +582,17 @@ function arbor(m, zFront, zBack, r = 0.12) {
 // ---------------------------------------------------------------- assemblies
 
 // Pockets cut into the main plate around every moving part; they go down to the base plate
-const R = { center: 3.6, third: 2.9, fourth: 2.4, escape: 1.5, barrel: 4.2, balance: 2.05 };
+const R = { center: 3.6, third: 2.9, fourth: 2.4, escape: 1.5, barrel: 4.2, balance: 2.05, reverser: 2.0, reduction: 1.4, idler: 1.1 };
+// Automatic winding wheels in the upper right: a reversing wheel with a reduction wheel and an idler meshing
+// with it (0.14 mm tooth overlap); the idler runs under the automatic bridge, the reduction wheel under its cock
+POS.reverser = v2(5.2, 3.0);
+const meshWith = (pos, r, dir, rOther) => pos.clone().add(dir.normalize().multiplyScalar(r + rOther - 0.14));
+POS.reduction = meshWith(POS.reverser, R.reverser, v2(0.75, 0.66), R.reduction);
+POS.idler = meshWith(POS.reverser, R.reverser, v2(-0.35, 0.94), R.idler);
 const pockets = sdf.smoothUnion(0.6,
+  sdf.circle(POS.reverser, R.reverser + 0.3),
+  sdf.circle(POS.reduction, R.reduction + 0.3),
+  sdf.circle(POS.idler, R.idler + 0.3),
   sdf.circle(POS.center, R.center + 0.3),
   sdf.circle(POS.third, R.third + 0.3),
   sdf.circle(POS.fourth, R.fourth + 0.3),
@@ -773,6 +782,38 @@ function buildTrainBridge(m) {
   return group;
 }
 
+// Automatic winding wheels (positions see POS.reverser): partly hidden under the automatic bridge, a small
+// cock and the rotor. The reversing wheel turns once in 24 s; the others follow from the gearing.
+function buildWindingTrain(m) {
+  const group = new THREE.Group();
+  group.name = 'WindingTrain';
+  const wReverser = (Math.PI * 2) / 24;
+  const wheels = [
+    ['ReversingWheel', POS.reverser, R.reverser, 48, 5, wReverser, true],
+    ['ReductionWheel', POS.reduction, R.reduction, 34, 4, -wReverser * (R.reverser / R.reduction), false],
+    ['IdlerWheel', POS.idler, R.idler, 26, 3, -wReverser * (R.reverser / R.idler), false],
+  ];
+  for (const [name, pos, r, teeth, spokes, spin, capScrew] of wheels) {
+    const a = new THREE.Group();
+    a.name = name;
+    a.position.set(pos.x, pos.y, 0);
+    a.userData.spin = spin;
+    a.add(gear(m, r, teeth, Z.wheel2, 0.15, { spokes, hub: Math.min(0.55, r * 0.3) }));
+    a.add(arbor(m, Z.base, Z.bridgeBottom));
+    // The reversing wheel sits on a stud, held by a screw; the others pivot in the bridges above them
+    if (capScrew) a.add(screw(m.screw, 0, 0, Z.wheel2 - 0.15, { r: 0.38, slotAngle: 0.7 }));
+    group.add(a);
+  }
+  // Winding cock: one arm from a foot near the rim over the reduction wheel, with its jewel
+  const foot = v2(9.0, 3.2);
+  const field = sdf.smoothUnion(0.6, sdf.capsule(foot, POS.reduction, 0.55), sdf.circle(POS.reduction, 0.8), sdf.circle(foot, 0.85));
+  group.add(bridge(m, field, bounds(5.5, 1.5, 10.6, 7.2, 0.04), Z.bridgeBottom, Z.bridgeTop, {
+    name: 'WindingCock', screws: [{ x: foot.x, y: foot.y, angle: 2.6 }],
+  }));
+  group.add(jewel(m, POS.reduction.x, POS.reduction.y, Z.bridgeTop, 0.8));
+  return group;
+}
+
 // Automatic bridge in the centre: carries the rotor bearing, covers the centre wheel's pivot
 function buildAutomaticBridge(m) {
   const group = new THREE.Group();
@@ -918,6 +959,6 @@ export function buildMovement() {
   const group = new THREE.Group();
   group.name = 'Movement';
   const { group: train, wCenter } = buildGearTrain(m);
-  group.add(buildPlates(m), buildCasingRing(m), train, buildBarrel(m, wCenter), buildTrainBridge(m), buildAutomaticBridge(m), buildBalance(m));
+  group.add(buildPlates(m), buildCasingRing(m), train, buildBarrel(m, wCenter), buildTrainBridge(m), buildAutomaticBridge(m), buildWindingTrain(m), buildBalance(m));
   return { movement: group, rotor: buildRotor(m) };
 }

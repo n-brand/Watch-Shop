@@ -33,6 +33,30 @@ function findMovers(root) {
   return movers;
 }
 
+// Fades the strap (opacity 0..1) so one can look past the clasp at the movement. Faded meshes get transparent
+// copies of their materials (materials are shared with the case); at opacity 1 the originals come back.
+// A material swapped in meanwhile (another look) simply becomes the new original.
+function fadeStrap(strap, opacity) {
+  strap.traverse((obj) => {
+    if (!obj.isMesh) return;
+    const { userData: data } = obj;
+    if (opacity >= 1) {
+      if (data.solidMaterial && obj.material === data.fadeMaterial) obj.material = data.solidMaterial;
+      return;
+    }
+    if (obj.material !== data.fadeMaterial) {
+      data.solidMaterial = obj.material;
+      const fade = (m) => Object.assign(m.clone(), { transparent: true, depthWrite: false });
+      data.fadeMaterial = Array.isArray(obj.material) ? obj.material.map(fade) : fade(obj.material);
+      obj.material = data.fadeMaterial;
+    }
+    for (const m of [data.fadeMaterial].flat()) {
+      m.opacity = opacity;
+      m.visible = opacity > 0.02;
+    }
+  });
+}
+
 // wheelZoom: 'ctrl' = plain wheel scrolls the page, Ctrl/Cmd + wheel zooms; 'always' = plain wheel zooms
 // model: which procedural watch to build when there is no modelPath (see MODELS in config.js)
 export async function createViewer(container, { reducedMotion = false, modelPath, model, wheelZoom = 'ctrl' } = {}) {
@@ -128,6 +152,24 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   // Let the page scroll vertically on touch; horizontal drags still rotate.
   renderer.domElement.style.touchAction = 'pan-y';
 
+  // Zoomed in on the caseback, the strap and clasp fade out so the movement stays in view: from 55 % of the
+  // framing distance (incl. camera zoom) down to 35 % it goes from opaque to invisible. Only from behind
+  // (camera on the watch's -Z side), so the front view keeps its strap.
+  const camLocal = new THREE.Vector3();
+  let strapOpacity = 1;
+  function updateStrapFade() {
+    if (!parts.strap) return;
+    const closeness = camera.position.distanceTo(controls.target) / (fitDistance(camera.aspect) * camera.zoom);
+    camLocal.copy(camera.position);
+    watch.worldToLocal(camLocal).normalize();
+    const behind = THREE.MathUtils.smoothstep(-camLocal.z, 0.1, 0.4);
+    const close = 1 - THREE.MathUtils.smoothstep(closeness, 0.35, 0.55);
+    const opacity = 1 - behind * close;
+    // Applied every frame while faded, so a strap or model swapped in meanwhile fades too
+    if (opacity < 1 || strapOpacity < 1) fadeStrap(parts.strap, opacity);
+    strapOpacity = opacity;
+  }
+
   let lastFrame = performance.now();
   function render() {
     const now = performance.now();
@@ -143,6 +185,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
     }
     if (parts.rotor && !reducedMotion) parts.rotor.rotation.z -= 0.004;
     controls.update();
+    updateStrapFade();
     renderer.render(scene, camera);
   }
 
