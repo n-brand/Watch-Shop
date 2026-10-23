@@ -4,7 +4,7 @@
     "file": "v001.glb",
     "date": "2026-10-19T12:15:59.756Z",
     "note": "Ausgangsdesign: Roségold 41 mm, Sonnenschliff-Zifferblatt, Gliederband, Lederband-Variante, Saphirboden mit Rotor",
-    "bytes": 700816,
+    "bytes": 453808,
     "thumb": "v001.webp"
   },
   {
@@ -12,7 +12,7 @@
     "file": "v002.glb",
     "date": "2026-10-19T12:18:41.814Z",
     "note": "Saphirglas entspiegelt: deutlich weniger Reflexion und Blendung, dezenter Beschichtungsschimmer",
-    "bytes": 698812,
+    "bytes": 451804,
     "thumb": "v002.webp"
   },
   {
@@ -20,7 +20,7 @@
     "file": "v003.glb",
     "date": "2026-10-19T12:20:47.386Z",
     "note": "Glas fast unsichtbar: ohne Transmission, nur leichte Randspiegelung; Zifferblatt-Klarlack reduziert",
-    "bytes": 701992,
+    "bytes": 454984,
     "thumb": "v003.webp"
   },
   {
@@ -28,7 +28,7 @@
     "file": "v004.glb",
     "date": "2026-10-19T12:55:48.848Z",
     "note": "Gelbgold-Gehäuse; aufgesetztes 3D-Logo K «Brillant gefasst» (Fassung Gehäusemetall, Stein Diamant) statt gedrucktem Rhombus",
-    "bytes": 701300,
+    "bytes": 454644,
     "thumb": "v004.webp"
   },
   {
@@ -36,7 +36,7 @@
     "file": "v005.glb",
     "date": "2026-10-19T13:18:58.669Z",
     "note": "Logo K: Lücken im Brillantschliff mit Rundistenfacetten geschlossen; Stein sitzt bündig in der Fassung",
-    "bytes": 703060,
+    "bytes": 456196,
     "thumb": "v005.webp"
   },
   {
@@ -44,7 +44,7 @@
     "file": "v006.glb",
     "date": "2026-10-19T13:38:21.484Z",
     "note": "Fotorealistische Überarbeitung: Studio-Licht mit Softboxen, PBR-Gold ohne Klarlack (poliert/gebürstet, Mikrokratzer), Fasen an Gehäuse und Lünette, geriffelte Krone, gewölbtes Saphirglas, profilierte Glieder mit Gelenkstiften, facettierte Indizes und Dauphine-Zeiger, 85-mm-Kamera; optimiert auf unter 2 MB",
-    "bytes": 759380,
+    "bytes": 505568,
     "thumb": "v006.webp"
   },
   {
@@ -52,7 +52,7 @@
     "file": "v007.glb",
     "date": "2026-10-19T13:46:35.060Z",
     "note": "Ein breiterer Index bei 12 statt Doppelindex (Indizes nach echter Bauweise: appliziert, diamantiert, Aussenkanten auf einem Kreis); Faltschliesse entlang der Bandkurve gebogen und bündig; Krone 5 mm, näher am Gehäuse",
-    "bytes": 759228,
+    "bytes": 505500,
     "thumb": "v007.webp"
   },
   {
@@ -60,7 +60,7 @@
     "file": "v008.glb",
     "date": "2026-10-19T13:54:46.958Z",
     "note": "Kristall-Logo bei 12 statt Index (grösser, 4 mm), alle übrigen Indizes gleich gross; echte Faltschliesse gerade und flach (gebürsteter Körper, polierter Deckel mit Kristall, Öffnungslasche, Scharniere); Band unten abgeflacht wie ein Handgelenk",
-    "bytes": 757608,
+    "bytes": 503732,
     "thumb": "v008.webp"
   },
   {
@@ -68,7 +68,7 @@
     "file": "v009.glb",
     "date": "2026-10-19T14:01:54.994Z",
     "note": "Armband für ein 18,5-cm-Handgelenk ausgelegt (Innenumfang ~190 mm statt ~172 mm); Bandanstoss-Abstand 51,9 mm = ~88 % der Handgelenkbreite",
-    "bytes": 759356,
+    "bytes": 503808,
     "thumb": "v009.webp"
   },
   {
@@ -77,7 +77,7 @@
     "file": "v010.glb",
     "date": "2026-10-23T11:08:22.138Z",
     "note": "Neues Modell Lumen (digital): Kissengehäuse 37 × 40 mm mit integrierten, verjüngten Bandanstössen, gebürstete Lunette mit polierter Fase, flaches Saphirglas, Display mit 7-Segment-Anzeige (Zeit, Sekunden, Wochentag, Datum) und Orvane-Kristall, vier Drücker, gravierter Gehäuseboden; das Display zeigt live die echte Uhrzeit",
-    "bytes": 2804588,
+    "bytes": 419876,
     "thumb": "v010.webp"
   },
   {
@@ -86,7 +86,7 @@
     "file": "v011.glb",
     "date": "2026-10-23T11:14:05.361Z",
     "note": "Lumen: längliche, flache Drücker mit polierter Fase auf dunkler Dichtungsfuge statt runder Knöpfe; Zeitzeile im Display wird ausgemessen und passt mit den Sekunden immer ins Anzeigefenster",
-    "bytes": 2952740,
+    "bytes": 411040,
     "thumb": "v011.webp"
   },
   {
@@ -95,7 +95,7 @@
     "file": "v012.glb",
     "date": "2026-10-23T11:21:51.011Z",
     "note": "Lumen – Faltverschluss neu: ohne Stein, gebürsteter, gewölbter Deckel mit poliertem Mittelsteg und graviertem ORVANE, polierte Hebelasche hinter feiner Fuge, Trennfuge zur Klinge, grössere Scharniere ohne Lücke zum Band",
-    "bytes": 3140316,
+    "bytes": 429512,
     "thumb": "v012.webp"
   },
   {
@@ -104,7 +104,7 @@
     "file": "v013.glb",
     "date": "2026-10-23T11:21:53.274Z",
     "note": "Meridian – Faltverschluss neu: ohne Stein, gebürsteter, gewölbter Deckel mit poliertem Mittelsteg und graviertem ORVANE, polierte Hebelasche hinter feiner Fuge, Trennfuge zur Klinge, grössere Scharniere ohne Lücke zum Band",
-    "bytes": 1933000,
+    "bytes": 434124,
     "thumb": "v013.webp"
   },
   {
@@ -113,7 +113,7 @@
     "file": "v014.glb",
     "date": "2026-10-23T11:27:16.665Z",
     "note": "Meridian – Kürzere Bandanstösse (Band beginnt 23,4 statt 25,9 mm von der Mitte, Lug-to-Lug ~46,8 statt 51,9 mm); das Band folgt demselben Handgelenk und ist dadurch entsprechend länger",
-    "bytes": 1933036,
+    "bytes": 433976,
     "thumb": "v014.webp"
   },
   {
@@ -122,7 +122,7 @@
     "file": "v015.glb",
     "date": "2026-10-23T11:27:19.757Z",
     "note": "Lumen – Kürzere Bandanstösse (Band beginnt 23,4 statt 25,9 mm von der Mitte, Lug-to-Lug ~46,8 statt 51,9 mm); das Band folgt demselben Handgelenk und ist dadurch entsprechend länger",
-    "bytes": 3147716,
+    "bytes": 433592,
     "thumb": "v015.webp"
   },
   {
@@ -131,7 +131,7 @@
     "file": "v016.glb",
     "date": "2026-10-23T11:45:18.353Z",
     "note": "Meridian: Uhrwerk OR-01 in 3D hinter dem Saphirboden – Federhaus mit Sperrrad, Räderkette (Minuten-, Kleinboden-, Sekunden- und Ankerrad mit Trieben und Lagersteinen), Anker, Unruh mit gebläuter Spirale unter dem Kloben; Räder drehen im Übersetzungsverhältnis, Sekundenrad 1 U/min, Unruh schwingt mit 4 Hz",
-    "bytes": 3146280,
+    "bytes": 688852,
     "thumb": "v016.webp"
   },
   {
@@ -140,7 +140,7 @@
     "file": "v017.glb",
     "date": "2026-10-23T12:05:49.727Z",
     "note": "Meridian: Uhrwerk durchbrochen nach Vorbild offener Manufakturwerke – skelettierte Platine mit tiefen Taschen bis zur Grundplatte, Räder auf mehreren Ebenen, dicke Ruthenium-Brücken (sandgestrahlt) mit breiten polierten Fasen und Gravuren, grosses Sperrrad mit sechs Speichen auf Kreuzbrücke, Klinke, durchbrochener Goldrotor mit drei Speichen und graviertem Rand",
-    "bytes": 4828996,
+    "bytes": 1257660,
     "thumb": "v017.webp"
   },
   {
@@ -149,7 +149,7 @@
     "file": "v018.glb",
     "date": "2026-10-23T13:13:50.706Z",
     "note": "Meridian: Zifferblatt Königsblau, Zeiger tiefer über dem Zifferblatt mit Stunden-, Minuten- und Sekundenrohr (geschlossener Zeigerstapel, kein Durchblick darunter), Rotor-Gravur mit «DESIGN NICOLAS BRAND»",
-    "bytes": 4849704,
+    "bytes": 1252356,
     "thumb": "v018.webp"
   },
   {
@@ -158,7 +158,7 @@
     "file": "v019.glb",
     "date": "2026-10-23T13:14:19.646Z",
     "note": "Lumen: Gravur «DESIGN NICOLAS BRAND» auf dem Gehäuseboden",
-    "bytes": 3155080,
+    "bytes": 437400,
     "thumb": "v019.webp"
   }
 ]
