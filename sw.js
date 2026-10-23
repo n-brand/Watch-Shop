@@ -1,10 +1,13 @@
 // Orvane service worker: makes the shop, history and logo page work offline.
 // Own files: network first (so development changes show up immediately), cache as offline fallback.
 // Saved history models (vNNN.glb): cache first, they are immutable once stored.
+// All models listed in index.json (plus thumbnails) are cached on install, so the history works fully offline;
+// pages ask for a re-sync on every start, which picks up versions saved after the install.
 // CDN libraries and fonts: cache first (their URLs are version-pinned and never change).
 // Bump VERSION when the precache list changes.
 // All paths are relative to this file, so the app also works in a sub-folder (e.g. GitHub Pages /Watch-Shop/).
-const VERSION = 'orvane-v4';
+const VERSION = 'orvane-v5';
+const HISTORY_URL = './assets/models/history/';
 
 const CDN_THREE = 'https://cdn.jsdelivr.net/npm/three@0.169.0';
 const PRECACHE = [
@@ -39,8 +42,32 @@ const PRECACHE = [
 
 const CACHE_FIRST_HOSTS = new Set(['cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com']);
 
+// Stores index.json and every model + thumbnail it lists; files already in the cache are not downloaded again
+async function cacheModels() {
+  const cache = await caches.open(VERSION);
+  const indexUrl = new URL(`${HISTORY_URL}index.json`, self.location).href;
+  const response = await fetch(indexUrl, { cache: 'no-store' });
+  if (!response.ok) throw new Error(`index.json: ${response.status}`);
+  const versions = await response.clone().json();
+  await cache.put(indexUrl, response);
+  const urls = versions.flatMap((v) => [v.file, v.thumb]).filter(Boolean)
+    .map((file) => new URL(`${HISTORY_URL}${file}`, self.location).href);
+  const missing = [];
+  for (const url of urls) if (!(await cache.match(url, { ignoreVary: true }))) missing.push(url);
+  await cache.addAll(missing);
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches.open(VERSION)
+      .then((cache) => cache.addAll(PRECACHE))
+      .then(cacheModels)
+      .then(() => self.skipWaiting()),
+  );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'sync-models') event.waitUntil(cacheModels().catch(() => {})); // offline: keep what we have
 });
 
 self.addEventListener('activate', (event) => {
@@ -67,7 +94,7 @@ async function networkFirst(request) {
 
 async function cacheFirst(request) {
   const cache = await caches.open(VERSION);
-  const cached = await cache.match(request);
+  const cached = await cache.match(request, { ignoreVary: true });
   if (cached) return cached;
   const response = await fetch(request);
   if (response.ok || response.type === 'opaque') cache.put(request, response.clone());

@@ -76,4 +76,6 @@ renderFavicon();
 // sw.js is resolved relative to this module, so the site also works in a sub-folder (GitHub Pages).
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register(new URL('../sw.js', import.meta.url)).catch((err) => console.warn('Service worker not registered', err));
+  // Cache history models saved since the install, so they are available offline too
+  if (navigator.onLine) navigator.serviceWorker.ready.then((reg) => reg.active?.postMessage('sync-models'));
 }
