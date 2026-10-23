@@ -8,9 +8,10 @@ Erstellt von [Nicolas Brand](https://n-brand.github.io/portfolio/)
 
 ## Lokal starten
 
-Benötigt nur Node.js, keine Installation von Paketen:
+Benötigt Node.js. Die Pakete braucht nur das komprimierte Speichern neuer Versionen; ohne sie läuft alles, Versionen werden dann unkomprimiert gespeichert:
 
 ```bash
+npm install
 node server.js
 ```
 
@@ -30,7 +31,7 @@ Danach im Browser öffnen: [http://127.0.0.1:5173](http://127.0.0.1:5173)
 - `js/scene.js`, `js/studio.js` – 3D-Ansicht, Studio-Licht, Kamera (Verlauf und Render-Werkzeug)
 - `assets/img/renders/` – Produktbilder der Uhren (WebP, transparenter Hintergrund), pro Modell, Gehäuse und Armband
 - `assets/models/history/` – gespeicherte Versionen (`vNNN.glb`, Vorschaubilder, `index.json`)
-- `server.js` – kleiner lokaler Server; speichert neue Versionen über `/api/versions`
+- `server.js` – kleiner lokaler Server; speichert neue Versionen über `/api/versions`, komprimiert mit `tools/compress-glb.js` (Meshopt, WebP; auch einzeln: `node tools/compress-glb.js in.glb out.glb`)
 - `sw.js`, `manifest.webmanifest`, `assets/icons/` – PWA / Offline
 - `tools/` – Hilfsskripte (Platzhalterbilder, App-Icons) und `render-stills.html`: rendert die Produktbilder neu, wenn sich die Uhr ändert (lokal unter http://127.0.0.1:5173/tools/render-stills.html, speichert über `/api/renders`)
 - `tools/save-version.html` – Modell wählen, in 3D ansehen und als nächste Version im Verlauf speichern (lokal unter http://127.0.0.1:5173/tools/save-version.html)

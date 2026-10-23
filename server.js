@@ -1,6 +1,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
+const { compressGlb } = require('./tools/compress-glb.js');
 
 const HOST = '127.0.0.1';
 const PORT = Number(process.env.PORT) || 5173;
@@ -122,10 +123,17 @@ function saveVersion(req, res) {
     return;
   }
 
-  readBody(req, res, MAX_MODEL_BYTES, (data) => {
-    if (data.subarray(0, 4).toString('ascii') !== 'glTF') {
+  readBody(req, res, MAX_MODEL_BYTES, async (raw) => {
+    if (raw.subarray(0, 4).toString('ascii') !== 'glTF') {
       res.writeHead(400).end('Body is not a binary glTF');
       return;
+    }
+    // Stored compressed like the existing versions; without the packages (npm install) the raw export is kept
+    let data = raw;
+    try {
+      data = await compressGlb(raw);
+    } catch (err) {
+      console.warn(`Storing uncompressed model: ${err.code === 'ERR_MODULE_NOT_FOUND' ? 'run npm install for compression' : err.message}`);
     }
 
     fs.mkdirSync(HISTORY_DIR, { recursive: true });
@@ -148,7 +156,7 @@ function saveVersion(req, res) {
     fs.writeFileSync(path.join(HISTORY_DIR, entry.file), data);
     index.push(entry);
     fs.writeFileSync(HISTORY_INDEX, JSON.stringify(index, null, 2));
-    console.log(`Saved watch version ${id} (${(data.length / 1024).toFixed(0)} KB): ${note}`);
+    console.log(`Saved watch version ${id} (${(raw.length / 1024).toFixed(0)} KB -> ${(data.length / 1024).toFixed(0)} KB): ${note}`);
     res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' }).end(JSON.stringify(entry));
   });
 }
