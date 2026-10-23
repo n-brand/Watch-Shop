@@ -710,18 +710,29 @@ function buildBarrel(m, wCenter) {
     name: 'BarrelBridge', screws: [{ x: -8.75, y: 4.1, angle: 0.3 }, { x: -6.7, y: -1.2, angle: 1.9 }],
   }));
 
-  // Large ratchet wheel with six spokes on top: satin steel, polished bevel; the bridge shows between its spokes
+  // Large ratchet wheel with six spokes on top: satin steel, polished bevel; the bridge shows between its spokes.
+  // The rotor winds it continuously; shown faster than real (one turn in 40 s) so the winding is visible.
+  // It turns counter-clockwise, so the click slides up the tooth ramps; the crown wheel meshes with it.
   const top = Z.bridgeTop - 0.01;
-  const ratchet = solid(wheelShape(RATCHET_R, 54, { tooth: 0.22, ratchet: true, spokes: 6, hub: 1.05, rim: 0.42, spokeW: 0.42 }), top, top - 0.18,
-    m.satinSteel, m.bevel, { bevel: 0.03, bevelSegments: 2, curveSegments: 8, uvs: { disc: { x: 0, y: 0, r: RATCHET_R } } });
+  const wRatchet = (Math.PI * 2) / 40;
+  const ratchet = new THREE.Group();
+  ratchet.name = 'RatchetWheel';
   ratchet.position.set(POS.barrel.x, POS.barrel.y, 0);
-  group.add(ratchet, screw(m.screw, POS.barrel.x, POS.barrel.y, top - 0.18, { r: 0.62, slotAngle: 0.4 }));
+  ratchet.userData.spin = wRatchet;
+  ratchet.add(solid(wheelShape(RATCHET_R, 54, { tooth: 0.22, ratchet: true, spokes: 6, hub: 1.05, rim: 0.42, spokeW: 0.42 }), top, top - 0.18,
+    m.satinSteel, m.bevel, { bevel: 0.03, bevelSegments: 2, curveSegments: 8, uvs: { disc: { x: 0, y: 0, r: RATCHET_R } } }));
+  ratchet.add(screw(m.screw, 0, 0, top - 0.18, { r: 0.62, slotAngle: 0.4 }));
+  group.add(ratchet);
 
-  const crown = solid(wheelShape(CROWN_R, 30, { tooth: 0.16, spokes: 0 }), top, top - 0.14, m.satinSteel, m.bevel, {
-    bevel: 0.02, curveSegments: 6, uvs: { disc: { x: 0, y: 0, r: CROWN_R } },
-  });
+  const crown = new THREE.Group();
+  crown.name = 'CrownWheel';
   crown.position.set(POS.crown.x, POS.crown.y, 0);
-  group.add(crown, screw(m.screw, POS.crown.x, POS.crown.y, top - 0.14, { r: 0.4, slotAngle: 1.2 }));
+  crown.userData.spin = -wRatchet * (RATCHET_R / CROWN_R);
+  crown.add(solid(wheelShape(CROWN_R, 30, { tooth: 0.16, spokes: 0 }), top, top - 0.14, m.satinSteel, m.bevel, {
+    bevel: 0.02, curveSegments: 6, uvs: { disc: { x: 0, y: 0, r: CROWN_R } },
+  }));
+  crown.add(screw(m.screw, 0, 0, top - 0.14, { r: 0.4, slotAngle: 1.2 }));
+  group.add(crown);
 
   // Click: the pawl that keeps the ratchet from unwinding; it pivots on the bridge arm just outside the ratchet
   const toFoot = v2(-8.75, 4.1).sub(POS.barrel).normalize();

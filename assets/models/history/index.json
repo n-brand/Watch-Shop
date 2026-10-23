@@ -196,5 +196,14 @@
     "note": "Meridian: Werkhaltering veredelt: rhodinierte Deckfläche mit Kreisschliff und umlaufender, schwarz gefuellter Gravur, polierte Innenwand mit 96 Rillen statt glatter Aluwand",
     "bytes": 2457240,
     "thumb": "v023.webp"
+  },
+  {
+    "id": "v024",
+    "model": "meridian",
+    "file": "v024.glb",
+    "date": "2026-10-23T21:17:33.688Z",
+    "note": "Meridian: Sperrrad und Kronrad über dem Federhaus drehen sich sichtbar (Aufzug durch den Rotor, eine Umdrehung in 40 s)",
+    "bytes": 2457500,
+    "thumb": "v024.webp"
   }
 ]
