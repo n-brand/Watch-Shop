@@ -15,8 +15,9 @@ export const CASE_OPTIONS = [
 
 export const STRAP_OPTIONS = [
   { id: 'bracelet', label: 'Gliederband', variant: 'bracelet', swatch: 'linear-gradient(90deg,#b8b2a8 0 30%,#e8e2d8 30% 70%,#b8b2a8 70%)', price: 0 },
-  { id: 'leather-brown', label: 'Leder Cognac', variant: 'leather', color: 0x4a2412, swatch: '#7a4a2a', price: -1800 },
-  { id: 'leather-black', label: 'Leder Schwarz', variant: 'leather', color: 0x0e0d0d, swatch: '#1c1a19', price: -1800 },
+  // Leather: grain colour, painted edge and stitching thread (cream on cognac, tonal grey on black)
+  { id: 'leather-brown', label: 'Leder Cognac', variant: 'leather', color: 0x4a2412, edge: 0x1f120b, stitch: 0xd8c4a0, swatch: '#7a4a2a', price: -1800 },
+  { id: 'leather-black', label: 'Leder Schwarz', variant: 'leather', color: 0x0e0d0d, edge: 0x060606, stitch: 0x5a554e, swatch: '#1c1a19', price: -1800 },
 ];
 
 // Dial colours for models with a dial (Meridian): sunburst centre, darker edge, print colour (passed to

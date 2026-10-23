@@ -27,6 +27,8 @@ export async function applyLook(watch, parts, caseOpt, strapOpt, dialOpt) {
     if (node) node.visible = key === strapOpt.variant;
   }
   if (strapOpt.color !== undefined) forEachMaterial(MATERIAL_NAMES.leather, (mat) => mat.color.setHex(strapOpt.color));
+  if (strapOpt.edge !== undefined) forEachMaterial(MATERIAL_NAMES.leatherEdge, (mat) => mat.color.setHex(strapOpt.edge));
+  if (strapOpt.stitch !== undefined) forEachMaterial(MATERIAL_NAMES.stitch, (mat) => mat.color.setHex(strapOpt.stitch));
   if (dialOpt) {
     const texture = await dialTexture(dialOpt);
     forEachMaterial(MATERIAL_NAMES.dial, (mat) => {

@@ -28,6 +28,8 @@ export const DEFAULT_MODEL = 'meridian';
 export const MATERIAL_NAMES = {
   caseMetal: 'CaseMetal',
   leather: 'StrapLeather',
+  leatherEdge: 'StrapEdge',
+  stitch: 'StrapStitch',
   dial: 'Dial',
 };
 

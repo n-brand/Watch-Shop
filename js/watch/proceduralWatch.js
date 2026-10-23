@@ -1,8 +1,9 @@
 import * as THREE from 'three';
-import { toCreasedNormals, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { WATCH_PARTS, MATERIAL_NAMES } from '../config.js';
 import {
-  METALS, createMetal, createGlass, createDial, createDialTexture, createLeather, assignWorldUVs,
+  METALS, createMetal, createGlass, createDial, createDialTexture, createLeather, createLeatherEdge, createStitch,
+  LEATHER_TILE, assignWorldUVs,
 } from './materials.js';
 import { CRYSTALS } from '../logo/crystals.js';
 import { createCrystalMesh } from '../logo/crystalMesh.js';
@@ -593,65 +594,217 @@ function buildBracelet(polished, brushed, { endLinks = true } = {}) {
   return group;
 }
 
+// Leather strap: one band around the wrist (lug to lug), the pin buckle sits on the underside of the wrist.
+// Like a real strap it tapers from the lugs (19.6 mm) to the buckle (16 mm) and thins out a little;
+// the grain side is slightly domed, the edges are rounded and painted. UVs are millimetres / LEATHER_TILE
+// (u across, v along the strap) for the grain maps. Stitching, holes, keepers and the buckle follow the same frames.
+const LEATHER = { lugWidth: 19.6, buckleWidth: 16, lugThick: 3.0, buckleThick: 2.4, dome: 0.3, buckleAt: 0.62 };
+const STITCH = { inset: 1.35, pitch: 1.7, length: 1.05, radius: 0.17 };
+
 function buildLeather(polished) {
   const group = new THREE.Group();
   group.name = 'Leather';
-  const { pointAt, tangentAngle, total, tAt } = wristCurve();
+  const { pointAt, total, tAt } = wristCurve();
 
   // Path starts under the lugs, follows the wrist and ends under the opposite lugs
   const points = [new THREE.Vector3(0, STRAP_START - 5.4, -1.9)];
   for (let i = 0; i <= 80; i++) points.push(pointAt(tAt((i / 80) * total)));
   points.push(new THREE.Vector3(0, -(STRAP_START - 5.4), -1.9));
   const path = new THREE.CatmullRomCurve3(points);
+  const length = path.getLength();
+  const sBuckle = points[0].distanceTo(points[1]) + total * LEATHER.buckleAt;
 
-  // Cross-section: for a curve in the YZ plane three.js maps shape x to world X (width), shape y to thickness
-  const section = new THREE.Shape();
-  const half = 9.8;
-  const thick = 1.5;
-  section.moveTo(-half + 1, -thick);
-  section.lineTo(half - 1, -thick);
-  section.quadraticCurveTo(half, -thick, half, -thick + 1);
-  section.lineTo(half, thick - 1);
-  section.quadraticCurveTo(half, thick, half - 1, thick);
-  section.lineTo(-half + 1, thick);
-  section.quadraticCurveTo(-half, thick, -half, thick - 1);
-  section.lineTo(-half, -thick + 1);
-  section.quadraticCurveTo(-half, -thick, -half + 1, -thick);
-  section.closePath();
+  // Width and thickness taper linearly from each lug towards the buckle
+  const taper = (s) => Math.min(1, Math.abs(s - sBuckle) / (s < sBuckle ? sBuckle : length - sBuckle));
+  const halfW = (s) => (LEATHER.buckleWidth + (LEATHER.lugWidth - LEATHER.buckleWidth) * taper(s)) / 2;
+  const halfT = (s) => (LEATHER.buckleThick + (LEATHER.lugThick - LEATHER.buckleThick) * taper(s)) / 2;
+  // Frame at arc length s: the path lies in the YZ plane, so width is always world X; n points away from the wrist
+  const frameAt = (s) => {
+    const u = THREE.MathUtils.clamp(s / length, 0, 1);
+    const t = path.getTangentAt(u);
+    return { p: path.getPointAt(u), t, n: new THREE.Vector3(0, -t.z, t.y) };
+  };
+  // Height of the grain side above the centre line at x (domed between the edge radii)
+  const topY = (s, x) => {
+    const h = halfT(s);
+    const flat = halfW(s) - h;
+    return h + LEATHER.dome * Math.max(0, 1 - (x / flat) ** 2);
+  };
 
-  // Extrude output stores every triangle corner separately; leather has no texture, so weld by position
-  // (about a third of the data, and smooth normals instead of faceted ones)
-  let bandGeo = new THREE.ExtrudeGeometry(section, { steps: 140, curveSegments: 3, bevelEnabled: false, extrudePath: path });
-  bandGeo.deleteAttribute('normal');
-  bandGeo.deleteAttribute('uv');
-  bandGeo = mergeVertices(bandGeo, 1e-3);
+  // Cross-section ring: grain side, right edge, flesh side, left edge (edges are half circles of radius h)
+  const TOP = 14;
+  const ARC = 8;
+  function ring(s) {
+    const w = halfW(s);
+    const h = halfT(s);
+    const flat = w - h;
+    const pts = [];
+    for (let i = 0; i <= TOP; i++) {
+      const x = -flat + (2 * flat * i) / TOP;
+      pts.push({ x, y: topY(s, x), edge: false });
+    }
+    for (let i = 1; i < ARC; i++) {
+      const a = Math.PI / 2 - (Math.PI * i) / ARC;
+      pts.push({ x: flat + h * Math.cos(a), y: h * Math.sin(a), edge: true });
+    }
+    for (let i = 0; i <= TOP; i++) {
+      const x = flat - (2 * flat * i) / TOP;
+      pts.push({ x, y: -h, edge: false });
+    }
+    for (let i = 1; i < ARC; i++) {
+      const a = -Math.PI / 2 - (Math.PI * i) / ARC;
+      pts.push({ x: -flat + h * Math.cos(a), y: h * Math.sin(a), edge: true });
+    }
+    return pts;
+  }
+
+  const STEPS = 420;
+  const perRing = ring(0).length;
+  const positions = [];
+  const uvs = [];
+  for (let k = 0; k <= STEPS; k++) {
+    const s = (k / STEPS) * length;
+    const { p, n } = frameAt(s);
+    let arc = 0;
+    let prev = null;
+    for (const q of ring(s)) {
+      if (prev) arc += Math.hypot(q.x - prev.x, q.y - prev.y);
+      prev = q;
+      positions.push(p.x + q.x, p.y + n.y * q.y, p.z + n.z * q.y);
+      uvs.push(arc / LEATHER_TILE, s / LEATHER_TILE);
+    }
+  }
+  const segIsEdge = ring(0).map((q, i, all) => q.edge || all[(i + 1) % all.length].edge);
+  const faces = [];
+  const edges = [];
+  for (let k = 0; k < STEPS; k++) {
+    for (let i = 0; i < perRing; i++) {
+      const a = k * perRing + i;
+      const b = k * perRing + ((i + 1) % perRing);
+      const c = a + perRing;
+      const d = b + perRing;
+      (segIsEdge[i] ? edges : faces).push(a, c, b, b, c, d);
+    }
+  }
+  // End caps under the lugs (hidden, but close the band)
+  for (const k of [0, STEPS]) {
+    const first = k * perRing;
+    for (let i = 1; i < perRing - 1; i++) {
+      if (k === 0) edges.push(first, first + i + 1, first + i);
+      else edges.push(first, first + i, first + i + 1);
+    }
+  }
+  const bandGeo = new THREE.BufferGeometry();
+  bandGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  bandGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  bandGeo.setIndex([...faces, ...edges]);
+  bandGeo.addGroup(0, faces.length, 0);
+  bandGeo.addGroup(faces.length, edges.length, 1);
   bandGeo.computeVertexNormals();
-  const band = new THREE.Mesh(bandGeo, createLeather(0x7a4a2a));
-  group.add(shadowed(band));
+  // Winding check: the grain side of the middle ring has to face outward, else flip every triangle
+  const mid = Math.floor(STEPS / 2) * perRing + Math.floor(TOP / 2);
+  const nMid = new THREE.Vector3().fromBufferAttribute(bandGeo.attributes.normal, mid);
+  if (nMid.dot(frameAt(length / 2).n) < 0) {
+    const idx = bandGeo.index.array;
+    for (let i = 0; i < idx.length; i += 3) [idx[i + 1], idx[i + 2]] = [idx[i + 2], idx[i + 1]];
+    bandGeo.computeVertexNormals();
+  }
+  bandGeo.computeTangents();
+  const leather = createLeather(0x7a4a2a);
+  group.add(shadowed(new THREE.Mesh(bandGeo, [leather, createLeatherEdge(0x24150d)])));
 
-  // Pin buckle at the back
+  // Orientation of a part lying on the strap: local X across, local Y along, local Z outward
+  const basis = new THREE.Matrix4();
+  const place = (s, x, lift, scale = new THREE.Vector3(1, 1, 1)) => {
+    const { p, t, n } = frameAt(s);
+    basis.makeBasis(new THREE.Vector3(1, 0, 0), t, n);
+    const q = new THREE.Quaternion().setFromRotationMatrix(basis);
+    const pos = p.clone().add(new THREE.Vector3(x, 0, 0)).addScaledVector(n, lift);
+    return new THREE.Matrix4().compose(pos, q, scale);
+  };
+
+  // Edge stitching on the grain side: short thread capsules, half sunk into the leather.
+  // None under the buckle frame and the keepers.
+  const covered = (s) => Math.abs(s - sBuckle) < 7 || (s > sBuckle + 9 && s < sBuckle + 22);
+  const stitchGeo = new THREE.CapsuleGeometry(STITCH.radius, STITCH.length - 2 * STITCH.radius, 2, 6);
+  const stitches = [];
+  for (let s = 6.5; s < length - 6.5; s += STITCH.pitch) {
+    if (covered(s)) continue;
+    for (const side of [-1, 1]) {
+      const x = side * (halfW(s) - STITCH.inset);
+      stitches.push(place(s, x, topY(s, x) - 0.04));
+    }
+  }
+  const stitchMesh = new THREE.InstancedMesh(stitchGeo, createStitch(0xd8c4a0), stitches.length);
+  stitches.forEach((m, i) => stitchMesh.setMatrixAt(i, m));
+  group.add(shadowed(stitchMesh));
+
+  // Holes on the tail, which runs through the buckle: one under the tongue, five more towards the lug
+  const holeGeo = new THREE.CircleGeometry(0.8, 20);
+  const holeMat = new THREE.MeshStandardMaterial({ name: 'StrapHole', color: 0x050403, roughness: 1 });
+  const holeAt = [-1.5, -8.5, -15.5, -22.5, -29.5, -36.5].map((d) => sBuckle + d);
+  const holes = new THREE.InstancedMesh(holeGeo, holeMat, holeAt.length);
+  holeAt.forEach((s, i) => holes.setMatrixAt(i, place(s, 0, topY(s, 0) + 0.02)));
+  group.add(holes);
+
+  // Fixed and floating keeper behind the buckle: leather loops around the strap
+  for (const s of [sBuckle + 11, sBuckle + 19]) {
+    const w = halfW(s) + 0.75;
+    const top = topY(s, 0) + 0.65;
+    const bottom = halfT(s) + 0.45;
+    const loop = new THREE.Shape();
+    loop.moveTo(-w, -bottom);
+    loop.lineTo(w, -bottom);
+    loop.quadraticCurveTo(w + 0.5, -bottom, w + 0.5, 0);
+    loop.quadraticCurveTo(w + 0.5, top, w, top);
+    loop.lineTo(-w, top);
+    loop.quadraticCurveTo(-w - 0.5, top, -w - 0.5, 0);
+    loop.quadraticCurveTo(-w - 0.5, -bottom, -w, -bottom);
+    const inner = new THREE.Path();
+    inner.moveTo(-w + 0.6, -bottom + 0.45);
+    inner.lineTo(w - 0.6, -bottom + 0.45);
+    inner.lineTo(w - 0.6, top - 0.6);
+    inner.lineTo(-w + 0.6, top - 0.6);
+    inner.closePath();
+    loop.holes.push(inner);
+    const keeperGeo = new THREE.ExtrudeGeometry(loop, { depth: 4.5, bevelEnabled: true, bevelThickness: 0.25, bevelSize: 0.2, bevelSegments: 2, curveSegments: 6 });
+    keeperGeo.translate(0, 0, -2.25);
+    // Extrusion runs along Z; turn it so the extrusion follows the strap (Y) and shape Y points outward (Z)
+    keeperGeo.rotateX(Math.PI / 2);
+    // Shape coordinates are millimetres; the grain maps expect millimetres / LEATHER_TILE
+    const kuv = keeperGeo.attributes.uv;
+    for (let i = 0; i < kuv.count; i++) kuv.setXY(i, kuv.getX(i) / LEATHER_TILE, kuv.getY(i) / LEATHER_TILE);
+    keeperGeo.computeVertexNormals();
+    const keeper = shadowed(new THREE.Mesh(keeperGeo, leather));
+    keeper.applyMatrix4(place(s, 0, 0));
+    group.add(keeper);
+  }
+
+  // Pin buckle: frame across the strap, bar with tongue that dips into the hole under it
+  const fw = halfW(sBuckle) + 2.4;
   const frame = new THREE.Shape();
-  frame.moveTo(-12, -6);
-  frame.lineTo(12, -6);
-  frame.lineTo(12, 6);
-  frame.lineTo(-12, 6);
+  frame.moveTo(-fw, -5.5);
+  frame.lineTo(fw, -5.5);
+  frame.lineTo(fw, 5.5);
+  frame.lineTo(-fw, 5.5);
   frame.closePath();
-  const hole = new THREE.Path();
-  hole.moveTo(-10.4, -4.4);
-  hole.lineTo(-10.4, 4.4);
-  hole.lineTo(10.4, 4.4);
-  hole.lineTo(10.4, -4.4);
-  hole.closePath();
-  frame.holes.push(hole);
-  const buckleGeo = new THREE.ExtrudeGeometry(frame, { depth: 1.2, bevelEnabled: true, bevelThickness: 0.4, bevelSize: 0.4, bevelSegments: 2 });
-  buckleGeo.center();
+  const opening = new THREE.Path();
+  opening.moveTo(-fw + 1.6, -3.9);
+  opening.lineTo(-fw + 1.6, 3.9);
+  opening.lineTo(fw - 1.6, 3.9);
+  opening.lineTo(fw - 1.6, -3.9);
+  opening.closePath();
+  frame.holes.push(opening);
+  const buckleGeo = new THREE.ExtrudeGeometry(frame, { depth: 1.1, bevelEnabled: true, bevelThickness: 0.35, bevelSize: 0.35, bevelSegments: 2 });
+  buckleGeo.translate(0, 0, -0.55);
   const buckle = shadowed(new THREE.Mesh(assignWorldUVs(buckleGeo), polished));
-  const tBuckle = tAt(total * 0.62);
-  // Local Y follows the strap, local Z is the outward normal
-  const angle = tangentAngle(tBuckle);
-  buckle.rotation.x = angle;
-  buckle.position.copy(pointAt(tBuckle)).add(new THREE.Vector3(0, -Math.sin(angle), Math.cos(angle)).multiplyScalar(1.8));
+  buckle.applyMatrix4(place(sBuckle, 0, halfT(sBuckle) + LEATHER.dome + 0.9));
   group.add(buckle);
+
+  const tongueGeo = new THREE.CapsuleGeometry(0.42, 6.2, 2, 8);
+  const tongue = shadowed(new THREE.Mesh(assignWorldUVs(tongueGeo), polished));
+  tongue.applyMatrix4(place(sBuckle + 1.2, 0, halfT(sBuckle) + LEATHER.dome + 0.55));
+  group.add(tongue);
 
   group.visible = false;
   return group;

@@ -107,17 +107,118 @@ export function createMetal(color, { brushed = false } = {}) {
   });
 }
 
+// Leather grain is LEATHER_TILE mm wide; strap UVs are in millimetres / LEATHER_TILE (see buildLeather)
+export const LEATHER_TILE = 8;
+let leatherMaps = null;
+
+// Pebble grain from cell noise (distance to the nearest minus second-nearest cell point, tiling seamlessly):
+// raised pebbles with fine creases between them. Normal map from the height gradient, crease = rougher.
+function getLeatherMaps() {
+  if (leatherMaps) return leatherMaps;
+  const size = 512;
+  const cells = 22; // ~0.36 mm per pebble at an 8 mm tile
+  const rnd = seeded(23);
+  const pts = Array.from({ length: cells * cells }, (_, i) => [((i % cells) + rnd()) / cells, (Math.floor(i / cells) + rnd()) / cells]);
+  const height = new Float32Array(size * size);
+  for (let py = 0; py < size; py++) {
+    for (let px = 0; px < size; px++) {
+      const u = px / size;
+      const v = py / size;
+      const cx = Math.floor(u * cells);
+      const cy = Math.floor(v * cells);
+      let f1 = 9;
+      let f2 = 9;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const gx = (cx + dx + cells) % cells;
+          const gy = (cy + dy + cells) % cells;
+          const [qx, qy] = pts[gy * cells + gx];
+          // Wrapped neighbour cells sit one tile further over
+          const ox = qx + Math.floor((cx + dx) / cells) - u;
+          const oy = qy + Math.floor((cy + dy) / cells) - v;
+          const d = Math.hypot(ox, oy) * cells;
+          if (d < f1) [f1, f2] = [d, f1];
+          else if (d < f2) f2 = d;
+        }
+      }
+      const crease = Math.min(1, (f2 - f1) * 3.2);
+      height[py * size + px] = Math.sqrt(crease) * (0.92 + 0.08 * Math.sin(f1 * 9));
+    }
+  }
+
+  const draw = (fn) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const img = ctx.createImageData(size, size);
+    for (let i = 0; i < size * size; i++) fn(img.data, i * 4, i % size, Math.floor(i / size));
+    ctx.putImageData(img, 0, 0);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.anisotropy = 8;
+    texture.userData.mimeType = 'image/png';
+    return texture;
+  };
+  const h = (x, y) => height[((y + size) % size) * size + ((x + size) % size)];
+  const normal = draw((d, i, x, y) => {
+    const strength = 2.2;
+    const nx = (h(x - 1, y) - h(x + 1, y)) * strength;
+    const ny = (h(x, y - 1) - h(x, y + 1)) * strength;
+    const len = Math.hypot(nx, ny, 1);
+    d[i] = (nx / len * 0.5 + 0.5) * 255;
+    d[i + 1] = (ny / len * 0.5 + 0.5) * 255;
+    d[i + 2] = (1 / len * 0.5 + 0.5) * 255;
+    d[i + 3] = 255;
+  });
+  // Green channel is read: pebble tops are smoother (worn, waxed), creases matte
+  const rough = draw((d, i, x, y) => {
+    d[i] = d[i + 1] = d[i + 2] = 255 * (0.95 - 0.4 * h(x, y));
+    d[i + 3] = 255;
+  });
+  leatherMaps = { normal, rough };
+  return leatherMaps;
+}
+
 export function createLeather(color) {
+  const maps = getLeatherMaps();
   return new THREE.MeshPhysicalMaterial({
     name: MATERIAL_NAMES.leather,
     color,
     metalness: 0,
-    roughness: 0.72,
-    sheen: 0.25,
-    sheenRoughness: 0.7,
+    roughness: 0.75,
+    roughnessMap: maps.rough,
+    normalMap: maps.normal,
+    normalScale: new THREE.Vector2(0.55, 0.55),
+    sheen: 0.35,
+    sheenRoughness: 0.6,
     sheenColor: 0x806050,
-    clearcoat: 0.15,
-    clearcoatRoughness: 0.5,
+    clearcoat: 0.18,
+    clearcoatRoughness: 0.45,
+  });
+}
+
+// Painted, burnished strap edge: darker and glossier than the grain side
+export function createLeatherEdge(color) {
+  return new THREE.MeshPhysicalMaterial({
+    name: MATERIAL_NAMES.leatherEdge,
+    color,
+    metalness: 0,
+    roughness: 0.38,
+    clearcoat: 0.35,
+    clearcoatRoughness: 0.3,
+  });
+}
+
+// Waxed linen thread of the edge stitching
+export function createStitch(color) {
+  return new THREE.MeshPhysicalMaterial({
+    name: MATERIAL_NAMES.stitch,
+    color,
+    metalness: 0,
+    roughness: 0.55,
+    sheen: 0.5,
+    sheenRoughness: 0.5,
+    sheenColor: 0xffffff,
   });
 }
 
