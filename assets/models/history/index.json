@@ -133,5 +133,14 @@
     "note": "Meridian: Uhrwerk OR-01 in 3D hinter dem Saphirboden – Federhaus mit Sperrrad, Räderkette (Minuten-, Kleinboden-, Sekunden- und Ankerrad mit Trieben und Lagersteinen), Anker, Unruh mit gebläuter Spirale unter dem Kloben; Räder drehen im Übersetzungsverhältnis, Sekundenrad 1 U/min, Unruh schwingt mit 4 Hz",
     "bytes": 3146280,
     "thumb": "v016.webp"
+  },
+  {
+    "id": "v017",
+    "model": "meridian",
+    "file": "v017.glb",
+    "date": "2026-10-23T12:05:49.727Z",
+    "note": "Meridian: Uhrwerk durchbrochen nach Vorbild offener Manufakturwerke – skelettierte Platine mit tiefen Taschen bis zur Grundplatte, Räder auf mehreren Ebenen, dicke Ruthenium-Brücken (sandgestrahlt) mit breiten polierten Fasen und Gravuren, grosses Sperrrad mit sechs Speichen auf Kreuzbrücke, Klinke, durchbrochener Goldrotor mit drei Speichen und graviertem Rand",
+    "bytes": 4828996,
+    "thumb": "v017.webp"
   }
 ]
