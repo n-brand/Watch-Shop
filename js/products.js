@@ -1,10 +1,16 @@
-// Prices in CHF. Meridian images are stills of the 3D model (tools/render-stills.html);
+// Prices in CHF. Product images are stills of the 3D models (tools/render-stills.html);
 // the hidden collection still uses placeholder SVGs.
 
+// Watches in the configurator; case prices per model (straps are priced the same on both)
+export const WATCH_MODELS = [
+  { id: 'meridian', label: 'Meridian', detail: 'Automatik · 41 mm', prices: { rose: 24800, yellow: 25600, steel: 9400 } },
+  { id: 'lumen', label: 'Lumen', detail: 'Digital · 37 × 40 mm', prices: { rose: 12600, yellow: 13200, steel: 4200 } },
+];
+
 export const CASE_OPTIONS = [
-  { id: 'rose', label: 'Roségold', metal: 'roseGold', swatch: '#d9a383', price: 24800 },
-  { id: 'yellow', label: 'Gelbgold', metal: 'yellowGold', swatch: '#e2c07a', price: 25600 },
-  { id: 'steel', label: 'Edelstahl', metal: 'steel', swatch: '#c9ccd0', price: 9400 },
+  { id: 'rose', label: 'Roségold', metal: 'roseGold', swatch: '#d9a383' },
+  { id: 'yellow', label: 'Gelbgold', metal: 'yellowGold', swatch: '#e2c07a' },
+  { id: 'steel', label: 'Edelstahl', metal: 'steel', swatch: '#c9ccd0' },
 ];
 
 export const STRAP_OPTIONS = [
@@ -13,7 +19,8 @@ export const STRAP_OPTIONS = [
   { id: 'leather-black', label: 'Leder Schwarz', variant: 'leather', color: 0x0e0d0d, swatch: '#1c1a19', price: -1800 },
 ];
 
-export const renderImage = (caseOpt, strapOpt) => `assets/img/renders/meridian-${caseOpt.id}-${strapOpt.id}.webp`;
+export const priceOf = (model, caseOpt, strapOpt) => model.prices[caseOpt.id] + strapOpt.price;
+export const renderImage = (model, caseOpt, strapOpt) => `assets/img/renders/${model.id}-${caseOpt.id}-${strapOpt.id}.webp`;
 
 export const COLLECTION = [
   {

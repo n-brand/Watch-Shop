@@ -17,7 +17,7 @@ document.getElementById('collection-grid').addEventListener('click', (e) => {
   if (product) cart.add({ key: product.id, name: product.name, variant: product.variant, price: product.price, image: product.image });
 });
 
-initConfigurator(document.getElementById('configure-form'), document.querySelector('[data-configure-image]'), { onAdd: cart.add });
+initConfigurator(document.getElementById('configure-form'), document.querySelector('[data-configure-media]'), { onAdd: cart.add });
 
 // Highlight the nav entry of the section in the middle of the viewport
 const navLinks = [...document.querySelectorAll('.site-nav a[href^="#"]')];

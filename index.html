@@ -18,6 +18,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500&display=swap">
   <link rel="stylesheet" href="css/styles.css">
+  <!-- three.js is only loaded when the configurator comes into view (3D view) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.min.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
   <!-- Product images are stills of the 3D model, rendered with tools/render-stills.html -->
   <link rel="preload" href="assets/img/renders/hero.webp" as="image" type="image/webp" fetchpriority="high">
 
@@ -144,12 +153,25 @@
     </section>
 
     <section class="configure" id="configure">
-      <figure class="configure-media product-shot">
+      <figure class="configure-media product-shot" data-configure-media>
         <img src="assets/img/renders/meridian-yellow-bracelet.webp" alt="Meridian in Gelbgold mit Gliederband" width="1200" height="1500" data-configure-image loading="lazy" decoding="async">
+        <!-- 3D view: replaces the still once three.js has loaded (see js/configurator.js) -->
+        <div class="configure-stage" data-configure-stage role="img" hidden></div>
+        <figcaption class="configure-hint" data-configure-hint hidden>Ziehen zum Drehen</figcaption>
+        <!-- Phones: the inline view only shows the watch; turning it happens in full screen -->
+        <button type="button" class="configure-expand" data-configure-open hidden>Vollbild · drehen</button>
+        <button type="button" class="configure-close" data-configure-close aria-label="Vollbild schliessen" hidden>×</button>
       </figure>
       <form class="configure-panel" id="configure-form">
         <p class="eyebrow">Konfigurator</p>
-        <h2>Ihre Meridian</h2>
+        <h2>Ihre <span data-model-name>Meridian</span></h2>
+        <label class="configure-model">
+          <span>Modell</span>
+          <select name="model">
+            <option value="meridian">Meridian · Automatik · 41 mm</option>
+            <option value="lumen">Lumen · Digital · 37 × 40 mm</option>
+          </select>
+        </label>
         <fieldset>
           <legend>Gehäuse <span data-selected="case"></span></legend>
           <div class="swatches" data-option="case"></div>

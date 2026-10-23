@@ -280,6 +280,89 @@ main { overflow-x: clip; }
   border: 1px solid var(--line);
 }
 .configure-panel h2 { font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 1.5rem; }
+/* 3D view over the still: same box, so the swap does not move anything */
+.configure-media { position: relative; }
+.configure-stage { position: absolute; inset: 0; cursor: grab; }
+.configure-stage:active { cursor: grabbing; }
+.configure-stage canvas { display: block; width: 100%; height: 100%; }
+.configure-media.is-3d img { visibility: hidden; }
+.configure-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 0.5rem;
+  translate: -50% 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.configure-expand, .configure-close { display: none; }
+@media (max-width: 860px) {
+  /* Inline the watch is only shown: the page scrolls freely, turning happens in full screen */
+  .configure-stage { pointer-events: none; }
+  .configure-hint { display: none; }
+  .configure-media.is-3d .configure-expand:not([hidden]) {
+    display: block;
+    position: absolute;
+    right: 0;
+    bottom: 0.5rem;
+    padding: 0.55rem 0.9rem;
+    background: rgb(var(--bg-rgb) / 0.6);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .configure-media.is-fullview .configure-stage {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    pointer-events: auto;
+    background: radial-gradient(ellipse at 50% 45%, var(--stage-glow) 0%, var(--bg) 70%);
+  }
+  /* Full screen: one finger turns the watch in every direction, two fingers zoom */
+  .configure-media.is-fullview .configure-stage canvas { touch-action: none !important; }
+  .configure-media.is-fullview .configure-hint {
+    display: block;
+    position: fixed;
+    z-index: 31;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+  .configure-media.is-fullview .configure-close {
+    display: block;
+    position: fixed;
+    z-index: 31;
+    top: calc(0.75rem + env(safe-area-inset-top, 0px));
+    right: var(--gutter);
+    width: 2.75rem;
+    height: 2.75rem;
+    background: rgb(var(--bg-rgb) / 0.6);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .configure-media.is-fullview .configure-expand { display: none !important; }
+}
+.configure-model { display: grid; gap: 0.9rem; margin-bottom: 1.75rem; }
+.configure-model span { font-size: 0.72rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); }
+.configure-model select {
+  appearance: none;
+  width: 100%;
+  padding: 0.8rem 2.5rem 0.8rem 0.9rem;
+  background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%239c9488' stroke-width='1.4'%3E%3Cpath d='M1 1.5 6 6.5l5-5'/%3E%3C/svg%3E") no-repeat right 0.9rem center / 0.75rem;
+  border: 1px solid var(--line);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.configure-model select:hover { border-color: var(--text-muted); }
+.configure-model select:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 3px; }
 .configure-panel fieldset { border: 0; padding: 0; margin: 0 0 1.75rem; }
 .configure-panel legend { font-size: 0.72rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.9rem; }
 .configure-panel legend span { color: var(--text); letter-spacing: 0.1em; margin-left: 0.5rem; text-transform: none; }

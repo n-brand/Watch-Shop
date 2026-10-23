@@ -177,6 +177,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
     renderer, scene, camera, controls, rig, frame, setFrame, setRunning, setModel, snapshot,
     get watch() { return watch; },
     get parts() { return parts; },
+    get display() { return display; },
   };
 }
 
