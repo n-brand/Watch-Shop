@@ -130,7 +130,30 @@ function getFinishes() {
     }
   }, { srgb: kind !== 'rough', repeat: false });
 
+  // Circular brushing as anisotropy: per pixel the brushing direction runs around the centre (tangential),
+  // encoded in tangent space as R/G in [-1, 1], strength in B. Mapped over a disc like the graining. This spreads
+  // reflections into the soft radial band of a real circular-grained part instead of mirroring the softboxes
+  // as hard-edged patches (which read as a "triangle" on the flat rotor hub).
+  const circularAnisotropy = canvasTexture(512, (ctx, size) => {
+    const img = ctx.createImageData(size, size);
+    const c = size / 2;
+    for (let py = 0; py < size; py++) {
+      for (let px = 0; px < size; px++) {
+        const ux = px + 0.5 - c;
+        const uy = c - (py + 0.5); // canvas rows run down, texture v runs up
+        const len = Math.hypot(ux, uy) || 1;
+        const i = (py * size + px) * 4;
+        img.data[i] = Math.round(((-uy / len) * 0.5 + 0.5) * 255);
+        img.data[i + 1] = Math.round(((ux / len) * 0.5 + 0.5) * 255);
+        img.data[i + 2] = 255;
+        img.data[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  }, { repeat: false, alpha: true });
+
   finishes = {
+    circularAnisotropy,
     frost: { map: frost('color'), roughnessMap: frost('rough'), tile: FROST_TILE },
     perlage: { map: perlage('color'), roughnessMap: perlage('rough'), tile: PERLAGE_TILE },
     graining: { map: graining('color'), roughnessMap: graining('rough') },
@@ -178,18 +201,18 @@ function createMaterials() {
     base: new THREE.MeshPhysicalMaterial({ name: 'BasePlate', color: 0x6c7179, metalness: 1, roughness: 1, envMapIntensity: 1.2, map: f.perlage.map, roughnessMap: f.perlage.roughnessMap }),
     bridge: new THREE.MeshPhysicalMaterial({ name: 'Bridge', color: 0xa0a6ae, metalness: 1, roughness: 1, envMapIntensity: 1.4, map: f.frost.map, roughnessMap: f.frost.roughnessMap }),
     bevel: new THREE.MeshPhysicalMaterial({ name: 'Bevel', color: 0xeceef1, metalness: 1, roughness: 0.08, envMapIntensity: 1.5 }),
-    wheel: new THREE.MeshPhysicalMaterial({ name: 'Wheel', color: 0xdcc292, metalness: 1, roughness: 0.75, map: f.graining.map, roughnessMap: f.graining.roughnessMap }),
+    wheel: new THREE.MeshPhysicalMaterial({ name: 'Wheel', anisotropy: 0.75, anisotropyMap: f.circularAnisotropy, color: 0xdcc292, metalness: 1, roughness: 0.75, map: f.graining.map, roughnessMap: f.graining.roughnessMap }),
     wheelEdge: new THREE.MeshPhysicalMaterial({ name: 'WheelEdge', color: 0xe4ca98, metalness: 1, roughness: 0.16 }),
     // Lathed parts (jewels, bearing, collars, screws) are double-sided, so profile direction never hides a face
     steel: new THREE.MeshPhysicalMaterial({ name: 'Steel', color: 0xd3d6da, metalness: 1, roughness: 0.14, side: THREE.DoubleSide }),
-    satinSteel: new THREE.MeshPhysicalMaterial({ name: 'SatinSteel', color: 0xbfc3c9, metalness: 1, roughness: 0.75, map: f.graining.map, roughnessMap: f.graining.roughnessMap, side: THREE.DoubleSide }),
+    satinSteel: new THREE.MeshPhysicalMaterial({ name: 'SatinSteel', anisotropy: 0.75, anisotropyMap: f.circularAnisotropy, color: 0xbfc3c9, metalness: 1, roughness: 0.75, map: f.graining.map, roughnessMap: f.graining.roughnessMap, side: THREE.DoubleSide }),
     blued: new THREE.MeshPhysicalMaterial({ name: 'BluedSteel', color: 0x2a3f8c, metalness: 0.95, roughness: 0.22, side: THREE.DoubleSide }),
     screw: new THREE.MeshPhysicalMaterial({ name: 'Screw', color: 0xdfe2e6, metalness: 1, roughness: 0.12, side: THREE.DoubleSide }),
     ruby: new THREE.MeshPhysicalMaterial({ name: 'Ruby', color: 0xa3164a, metalness: 0, roughness: 0.04, ior: 1.77, specularIntensity: 1, clearcoat: 1, clearcoatRoughness: 0.02, side: THREE.DoubleSide }),
     chaton: new THREE.MeshPhysicalMaterial({ name: 'Chaton', color: 0xdfe2e6, metalness: 1, roughness: 0.12, side: THREE.DoubleSide }),
-    rotor: new THREE.MeshPhysicalMaterial({ name: 'Rotor', color: gold, metalness: 1, roughness: 0.8, map: rotorEngraving(10.45), roughnessMap: f.graining.roughnessMap }),
+    rotor: new THREE.MeshPhysicalMaterial({ name: 'Rotor', anisotropy: 0.75, anisotropyMap: f.circularAnisotropy, color: gold, metalness: 1, roughness: 0.8, map: rotorEngraving(10.45), roughnessMap: f.graining.roughnessMap }),
     rotorEdge: new THREE.MeshPhysicalMaterial({ name: 'RotorEdge', color: gold, metalness: 1, roughness: 0.12 }),
-    satinGold: new THREE.MeshPhysicalMaterial({ name: 'SatinGold', color: gold, metalness: 1, roughness: 0.7, map: f.graining.map, roughnessMap: f.graining.roughnessMap }),
+    satinGold: new THREE.MeshPhysicalMaterial({ name: 'SatinGold', anisotropy: 0.75, anisotropyMap: f.circularAnisotropy, color: gold, metalness: 1, roughness: 0.7, map: f.graining.map, roughnessMap: f.graining.roughnessMap }),
     ring: new THREE.MeshPhysicalMaterial({ name: 'CasingRing', color: 0x8d9198, metalness: 1, roughness: 0.45, side: THREE.DoubleSide }),
   };
 }
@@ -399,15 +422,21 @@ function shapeFromSdf(field, { min, max, step = 0.04, tolerance = 0.006 }) {
 }
 
 const insidePlate = sdf.circle(v2(0, 0), PLATE_R - 0.05);
+// Bridges end inside the casing ring (see buildCasingRing)
+const RING_INNER = 10.62;
+const insideRing = sdf.circle(v2(0, 0), RING_INNER - 0.04);
 const bounds = (x0, y0, x1, y1, step) => ({ min: v2(x0, y0), max: v2(x1, y1), step });
 
-// Bridge from a distance field: matte top, wide polished bevel
-function bridge(m, field, box, zFront, zBack, { bevel = 0.12, name } = {}) {
+// Bridge from a distance field: matte top, wide polished bevel. Screws [{ x, y, angle, r }] are sunk into
+// counterbores: the hole gets the same polished bevel as every other edge, the head stands just proud of the top
+function bridge(m, field, box, zFront, zBack, { bevel = 0.12, name, screws = [] } = {}) {
   const group = new THREE.Group();
   if (name) group.name = name;
-  for (const shape of shapeFromSdf(sdf.intersect(field, insidePlate), box)) {
+  const holes = screws.map((s) => sdf.circle(v2(s.x, s.y), (s.r ?? 0.42) + 0.06));
+  for (const shape of shapeFromSdf(sdf.subtract(sdf.intersect(field, insideRing), ...holes), box)) {
     group.add(solid(shape, zFront, zBack, m.bridge, m.bevel, { bevel, bevelSegments: 3, uvs: { tile: getFinishes().frost.tile } }));
   }
+  for (const s of screws) group.add(sunkScrew(m, s.x, s.y, zFront, zBack, { r: s.r, slotAngle: s.angle }));
   return group;
 }
 
@@ -428,6 +457,17 @@ function screw(material, x, y, zSeat, { r = 0.42, slotAngle = 0, h = 0.13 } = {}
   }
   group.rotation.z = slotAngle;
   group.position.set(x, y, zSeat);
+  return group;
+}
+
+// Screw sunk into a counterbore of a part spanning zFront..zBack: shank through the hole, head top 0.04 mm proud
+function sunkScrew(m, x, y, zFront, zBack, { r = 0.42, slotAngle = 0, h = 0.13 } = {}) {
+  const group = new THREE.Group();
+  const seat = zBack + h - 0.04;
+  group.add(screw(m.screw, x, y, seat, { r, slotAngle, h }));
+  const shank = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.5, r * 0.5, Math.abs(zFront - seat), 16).rotateX(Math.PI / 2), m.steel);
+  shank.position.set(x, y, (zFront + seat) / 2);
+  group.add(shank);
   return group;
 }
 
@@ -563,11 +603,18 @@ function buildPlates(m) {
   return group;
 }
 
-// Casing ring between the movement and the case, so the view through the glass ends in metal
+// Casing ring: a solid ring from the base plate up to just under the glass, holding the movement in the case.
+// Its inner wall (frosted ruthenium like the plate) and polished top edge close the gap between movement and
+// case, which otherwise read as empty space; the rotor (r 10.45) turns freely inside it.
 function buildCasingRing(m) {
-  const mesh = new THREE.Mesh(lathe([[PLATE_R, Z.base + 0.35], [PLATE_R, -4.95]], 96), m.ring);
-  mesh.receiveShadow = true;
-  return mesh;
+  const group = new THREE.Group();
+  group.name = 'CasingRing';
+  const ring = new THREE.Shape().absarc(0, 0, 11.4, 0, Math.PI * 2, false);
+  ring.holes.push(new THREE.Path().absarc(0, 0, RING_INNER, 0, Math.PI * 2, true));
+  group.add(solid(ring, Z.base + 0.3, Z.glassInner + 0.2, m.plate, m.bevel, {
+    bevel: 0.12, bevelSegments: 3, curveSegments: 160, uvs: { tile: getFinishes().frost.tile },
+  }));
+  return group;
 }
 
 function buildGearTrain(m) {
@@ -617,15 +664,17 @@ function buildBarrel(m, wCenter) {
 
   // Cross bridge over the barrel: two arms crossing at the barrel arbor, plus an arm to the crown wheel
   const field = sdf.smoothUnion(0.7,
-    sdf.capsule(v2(-9.7, 4.6), v2(-0.6, 0.9), 0.75),
+    sdf.capsule(v2(-9.4, 4.45), v2(-0.6, 0.9), 0.75),
     sdf.capsule(v2(-6.9, -1.4), v2(-2.2, 6.6), 0.75),
     sdf.circle(POS.barrel, 1.25),
     sdf.capsule(POS.barrel, POS.crown, 0.8),
     sdf.circle(POS.crown, 0.95),
-    sdf.circle(v2(-9.6, 4.5), 1.0),
+    sdf.circle(v2(-9.0, 4.3), 1.0),
     sdf.circle(v2(-6.7, -1.2), 0.95),
   );
-  group.add(bridge(m, field, bounds(-11.2, -3, 1, 9, 0.04), Z.bridgeBottom, Z.bridgeTop, { name: 'BarrelBridge' }));
+  group.add(bridge(m, field, bounds(-11.2, -3, 1, 9, 0.04), Z.bridgeBottom, Z.bridgeTop, {
+    name: 'BarrelBridge', screws: [{ x: -9.0, y: 4.3, angle: 0.3 }, { x: -6.7, y: -1.2, angle: 1.9 }],
+  }));
 
   // Large ratchet wheel with six spokes on top: satin steel, polished bevel; the bridge shows between its spokes
   const top = Z.bridgeTop - 0.01;
@@ -641,7 +690,7 @@ function buildBarrel(m, wCenter) {
   group.add(crown, screw(m.screw, POS.crown.x, POS.crown.y, top - 0.14, { r: 0.4, slotAngle: 1.2 }));
 
   // Click: the pawl that keeps the ratchet from unwinding; it pivots on the bridge arm just outside the ratchet
-  const toFoot = v2(-9.7, 4.6).sub(POS.barrel).normalize();
+  const toFoot = v2(-9.4, 4.45).sub(POS.barrel).normalize();
   const clickAt = POS.barrel.clone().addScaledVector(toFoot, RATCHET_R + 0.75);
   const tip = POS.barrel.clone().addScaledVector(toFoot.clone().rotateAround(v2(0, 0), 0.22), RATCHET_R - 0.08);
   for (const shape of shapeFromSdf(sdf.smoothUnion(0.3, sdf.capsule(clickAt, tip, 0.22), sdf.circle(clickAt, 0.45)),
@@ -649,14 +698,13 @@ function buildBarrel(m, wCenter) {
     group.add(solid(shape, top, top - 0.1, m.steel, m.bevel, { bevel: 0.02 }));
   }
   group.add(screw(m.screw, clickAt.x, clickAt.y, top - 0.1, { r: 0.3, slotAngle: 2.1 }));
-  for (const [x, y, a] of [[-9.75, 4.75, 0.3], [-6.7, -1.2, 1.9]]) group.add(screw(m.screw, x, y, Z.bridgeTop, { slotAngle: a }));
   return group;
 }
 
 function buildTrainBridge(m) {
   const group = new THREE.Group();
   const footA = v2(8.7, -1.3);
-  const footB = v2(7.0, -7.7);
+  const footB = v2(6.6, -7.3);
   const field = sdf.smoothUnion(0.6,
     sdf.capsule(POS.third, POS.fourth, 0.65),
     sdf.capsule(POS.fourth, POS.escape, 0.6),
@@ -665,10 +713,10 @@ function buildTrainBridge(m) {
     sdf.circle(POS.third, 0.85), sdf.circle(POS.fourth, 0.85), sdf.circle(POS.escape, 0.75),
     sdf.circle(footA, 1.05), sdf.circle(footB, 1.05),
   );
-  group.add(bridge(m, field, bounds(-1.5, -9.5, 11, 0.5, 0.04), Z.bridgeBottom, Z.bridgeTop, { name: 'TrainBridge' }));
+  group.add(bridge(m, field, bounds(-1.5, -9.5, 11, 0.5, 0.04), Z.bridgeBottom, Z.bridgeTop, {
+    name: 'TrainBridge', screws: [{ x: footA.x, y: footA.y, angle: 0.8 }, { x: footB.x, y: footB.y, angle: 2.4 }],
+  }));
   for (const p of [POS.third, POS.fourth, POS.escape]) group.add(jewel(m, p.x, p.y, Z.bridgeTop, 0.9));
-  group.add(screw(m.screw, footA.x, footA.y, Z.bridgeTop, { slotAngle: 0.8 }));
-  group.add(screw(m.screw, footB.x, footB.y, Z.bridgeTop, { slotAngle: 2.4 }));
   const along = Math.atan2(footA.y - POS.third.y, footA.x - POS.third.x);
   group.add(engraving('ORVANE  CAL. OR-01', (POS.third.x + footA.x) / 2 + 0.25, (POS.third.y + footA.y) / 2 + 0.05, Z.bridgeTop, along + Math.PI, 0.42));
   const alongB = Math.atan2(footB.y - POS.fourth.y, footB.x - POS.fourth.x);
@@ -680,16 +728,16 @@ function buildTrainBridge(m) {
 function buildAutomaticBridge(m) {
   const group = new THREE.Group();
   const footA = v2(5.6, 7.7);
-  const footB = v2(1.2, 10.1);
+  const footB = v2(1.0, 9.75);
   const field = sdf.smoothUnion(0.7,
     sdf.ring(POS.center, 1.2, 2.25),
     sdf.capsule(POS.center, footA, 0.75),
     sdf.capsule(POS.center, footB, 0.7),
     sdf.circle(footA, 0.95), sdf.circle(footB, 0.9),
   );
-  group.add(bridge(m, sdf.subtract(field, sdf.circle(POS.center, 1.15)), bounds(-3, -3, 8, 11.2, 0.04), Z.bridgeBottom, Z.bridgeTop, { name: 'AutomaticBridge' }));
-  group.add(screw(m.screw, footA.x, footA.y, Z.bridgeTop, { slotAngle: 0.3 }));
-  group.add(screw(m.screw, footB.x, footB.y, Z.bridgeTop, { slotAngle: 1.7 }));
+  group.add(bridge(m, sdf.subtract(field, sdf.circle(POS.center, 1.15)), bounds(-3, -3, 8, 11.2, 0.04), Z.bridgeBottom, Z.bridgeTop, {
+    name: 'AutomaticBridge', screws: [{ x: footA.x, y: footA.y, angle: 0.3 }, { x: footB.x, y: footB.y, angle: 1.7 }],
+  }));
   group.add(engraving('AUTOMATIC', 3.1, 4.3, Z.bridgeTop, Math.atan2(footA.y, footA.x) + Math.PI, 0.36));
   // Bearing seat for the rotor: polished steel collar standing in the bridge's centre opening
   group.add(shadowed(new THREE.Mesh(lathe([
@@ -727,11 +775,12 @@ function buildBalance(m) {
 
   // Balance cock: one-armed bridge from its foot near the rim to the balance staff, standing taller than
   // the other bridges; cap jewel over the staff, foot screw near the rim
-  const foot = v2(-7.4, -7.9);
+  const foot = v2(-6.8, -7.3);
   const field = sdf.smoothUnion(0.8, sdf.capsule(foot, POS.balance, 0.62), sdf.circle(POS.balance, 0.95), sdf.circle(foot, 1.35));
-  group.add(bridge(m, field, bounds(-11.2, -11.2, -3, -4, 0.04), Z.bridgeBottom, Z.cockTop, { name: 'BalanceCock', bevel: 0.14 }));
+  group.add(bridge(m, field, bounds(-11.2, -11.2, -3, -4, 0.04), Z.bridgeBottom, Z.cockTop, {
+    name: 'BalanceCock', bevel: 0.14, screws: [{ x: foot.x, y: foot.y, angle: 0.9 }],
+  }));
   group.add(jewel(m, POS.balance.x, POS.balance.y, Z.cockTop, 1.1));
-  group.add(screw(m.screw, foot.x, foot.y, Z.cockTop, { slotAngle: 0.9 }));
 
   // Pallet lever with its two pallet stones; it flicks with the balance
   const lever = new THREE.Group();
@@ -752,9 +801,10 @@ function buildBalance(m) {
   group.add(lever);
   const palletFoot = v2(-1.1, -9.3);
   group.add(bridge(m, sdf.smoothUnion(0.5, sdf.capsule(POS.lever, palletFoot, 0.5), sdf.circle(POS.lever, 0.7), sdf.circle(palletFoot, 0.9)),
-    bounds(-3, -11, 0.5, -4.3, 0.04), Z.bridgeBottom, Z.bridgeTop, { name: 'PalletBridge', bevel: 0.1 }));
+    bounds(-3, -11, 0.5, -4.3, 0.04), Z.bridgeBottom, Z.bridgeTop, {
+    name: 'PalletBridge', bevel: 0.1, screws: [{ x: palletFoot.x, y: palletFoot.y, angle: 0.2, r: 0.36 }],
+  }));
   group.add(jewel(m, POS.lever.x, POS.lever.y, Z.bridgeTop, 0.75));
-  group.add(screw(m.screw, palletFoot.x, palletFoot.y, Z.bridgeTop, { r: 0.36, slotAngle: 0.2 }));
   return group;
 }
 
@@ -777,13 +827,14 @@ export function buildRotor(m = createMaterials()) {
   for (const shape of shapeFromSdf(sdf.subtract(halfDisc, sdf.circle(v2(0, 0), 9.15)), box)) {
     rotor.add(solid(shape, Z.rotorBottom, Z.rotorFront + 0.01, m.rotorEdge, m.rotorEdge, { bevel: 0.05 }));
   }
-  // Hub: satin gold plate fixed to the bearing's inner race with three screws
+  // Hub: satin gold plate fixed to the bearing's inner race with three screws sunk into counterbores
+  const hubScrews = [0, 1, 2].map((k) => Math.PI / 2 + (k * Math.PI * 2) / 3);
   const hub = new THREE.Shape().absarc(0, 0, 2.6, 0, Math.PI * 2, false);
   hub.holes.push(new THREE.Path().absarc(0, 0, 1.05, 0, Math.PI * 2, true));
+  for (const a of hubScrews) hub.holes.push(new THREE.Path().absarc(Math.cos(a) * 1.95, Math.sin(a) * 1.95, 0.33, 0, Math.PI * 2, true));
   rotor.add(solid(hub, Z.rotorBack + 0.02, Z.rotorBack - 0.1, m.satinGold, m.rotorEdge, { bevel: 0.04, curveSegments: 48, uvs: { disc: { x: 0, y: 0, r: 2.6 } } }));
-  for (let k = 0; k < 3; k++) {
-    const a = Math.PI / 2 + (k * Math.PI * 2) / 3;
-    rotor.add(screw(m.screw, Math.cos(a) * 1.95, Math.sin(a) * 1.95, Z.rotorBack - 0.1, { r: 0.28, h: 0.08, slotAngle: a }));
+  for (const a of hubScrews) {
+    rotor.add(sunkScrew(m, Math.cos(a) * 1.95, Math.sin(a) * 1.95, Z.rotorBack + 0.02, Z.rotorBack - 0.1, { r: 0.28, h: 0.08, slotAngle: a }));
   }
   // Ball bearing: polished outer race, a ring of balls, satin inner race and the central screw
   rotor.add(shadowed(new THREE.Mesh(lathe([

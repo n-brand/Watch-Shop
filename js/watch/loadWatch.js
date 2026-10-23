@@ -1,5 +1,7 @@
 import { MODEL_PATH, WATCH_PARTS, OPTIONAL_PARTS, KIND_PARTS, DEFAULT_MODEL } from '../config.js';
+import { AdditiveBlending } from 'three';
 import { buildProceduralWatch } from './proceduralWatch.js';
+import { GLASS_REFLECTION } from './materials.js';
 
 async function loadGltf(path) {
   const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([
@@ -12,6 +14,13 @@ async function loadGltf(path) {
     if (obj.isMesh) obj.castShadow = obj.receiveShadow = true;
     // glTF has no visibility flag; saved versions mark hidden strap variants in extras
     if (obj.userData.hidden) obj.visible = false;
+    // glTF has no additive blending: restore the glass reflection layers (else they render as black discs)
+    if (obj.isMesh && obj.material.name === GLASS_REFLECTION) {
+      obj.castShadow = obj.receiveShadow = false;
+      Object.assign(obj.material, { transparent: true, blending: AdditiveBlending, depthWrite: false });
+      obj.material.envMapIntensity = obj.userData.reflectionStrength ?? 1;
+      obj.renderOrder = 3;
+    }
   });
   return gltf.scene;
 }

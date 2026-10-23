@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { WATCH_PARTS, MATERIAL_NAMES } from '../config.js';
-import { METALS, createMetal, createGlass, assignWorldUVs } from './materials.js';
+import { METALS, createMetal, createGlass, withReflection, assignWorldUVs } from './materials.js';
 import { shadowed, profileSolid, buildStrap, STRAP_START } from './proceduralWatch.js';
 import { createDisplayPanel, createDisplayMaterial } from './digitalDisplay.js';
 
@@ -225,7 +225,7 @@ function buildGlass() {
   const mesh = new THREE.Mesh(geo, glass);
   mesh.name = WATCH_PARTS.glass;
   mesh.renderOrder = 2;
-  return mesh;
+  return withReflection(mesh);
 }
 
 // Engraving for the caseback, dark lines on white (multiplied with the metal colour)

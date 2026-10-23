@@ -3,7 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { loadWatch } from './watch/loadWatch.js';
 import { updateHands } from './clock.js';
 import { attachLiveDisplay } from './watch/digitalDisplay.js';
-import { createStudioEnvironment, addStudioLights, configureRenderer } from './studio.js';
+import { createStudioEnvironment, createGlassEnvironment, addStudioLights, configureRenderer } from './studio.js';
+import { GLASS_REFLECTION } from './watch/materials.js';
 
 // Vertical field of view of an ~85 mm lens on full frame: long focal length, little perspective distortion
 const FOV = 16;
@@ -15,6 +16,13 @@ const FRAME_HALF_H = 42;
 
 // A digital watch shows the live time: its saved (frozen) display texture is swapped for a live one
 const liveDisplay = (parts) => (parts.display ? attachLiveDisplay(parts.display) : null);
+
+// Glass reflection layers reflect their own environment (a soft card in front), see createGlassEnvironment
+function useGlassEnvironment(root, envMap) {
+  root.traverse((obj) => {
+    if (obj.isMesh && obj.material.name === GLASS_REFLECTION) obj.material.envMap = envMap;
+  });
+}
 
 // Movement parts that move on their own: userData.spin (rad/s) turns, userData.swing ({ amp, hz }) oscillates
 function findMovers(root) {
@@ -35,6 +43,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
 
   const scene = new THREE.Scene();
   scene.environment = createStudioEnvironment(renderer);
+  const glassEnvironment = createGlassEnvironment(renderer);
   addStudioLights(scene);
 
   // rig: driven by scroll animations; camera orbit stays with the controls
@@ -45,6 +54,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   let parts = loaded.parts;
   let display = liveDisplay(parts);
   let movers = findMovers(watch);
+  useGlassEnvironment(watch, glassEnvironment);
   rig.add(watch);
 
   const camera = new THREE.PerspectiveCamera(FOV, 1, 20, 2500);
@@ -153,6 +163,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
     const request = ++modelRequest;
     const next = await loadWatch(typeof source === 'string' ? { path: source } : source);
     const nextDisplay = liveDisplay(next.parts); // before compiling, so the live material is the one compiled
+    useGlassEnvironment(next.root, glassEnvironment);
     if (request === modelRequest) await renderer.compileAsync(next.root, camera, scene);
     if (request !== modelRequest) {
       disposeTree(next.root);

@@ -25,9 +25,29 @@ export function createStudioEnvironment(renderer) {
   // Overhead fill and warm floor bounce keep shadows from going flat black
   softbox(env, { w: 12, h: 12, position: [0, 9, 0], intensity: 0.6 });
   softbox(env, { w: 12, h: 12, position: [0, -8, 0], intensity: 0.25, color: 0xffd9a8 });
+  return bake(renderer, env, 0.025);
+}
 
+// Reflection environment for the glasses only: a large, soft card above and in front of the watch, as product
+// photographers set one up so the crystal shows a gentle sheen. In the main studio the softboxes sit where a
+// glass seen from the front never reflects them, so the crystals looked like empty openings.
+export function createGlassEnvironment(renderer) {
+  const env = new THREE.Scene();
+  // A crystal is nearly flat, so where its reflection lands depends entirely on the view; single cards were
+  // missed from most angles. An evenly lit grey room with a brighter ceiling gives a faint veil from every
+  // direction, which Fresnel turns into a brighter rim at grazing angles, as on real sapphire.
+  env.background = new THREE.Color(0x4c5058);
+  softbox(env, { w: 22, h: 22, position: [0, 10, 0], intensity: 2.2, color: 0xf2f5ff });
+  softbox(env, { w: 14, h: 6, position: [1.6, 4.2, 9.5], intensity: 2.0, color: 0xf2f5ff });
+  // Narrow strip light front left: in the usual three-quarter views it lies as a slim highlight across the
+  // crystal, the classic cue that there is glass over the dial
+  softbox(env, { w: 1.6, h: 12, position: [-8, 0, 6], intensity: 1.9, color: 0xf2f5ff });
+  return bake(renderer, env, 0.04);
+}
+
+function bake(renderer, env, blur) {
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const texture = pmrem.fromScene(env, 0.025).texture;
+  const texture = pmrem.fromScene(env, blur).texture;
   pmrem.dispose();
   env.traverse((o) => {
     if (o.isMesh) {

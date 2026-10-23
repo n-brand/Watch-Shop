@@ -239,6 +239,38 @@ export function createGlass() {
   });
 }
 
+// Reflection layer for a glass: black, so its diffuse adds nothing, and blended additively, so only the
+// reflections of the studio add up on top of what lies behind. The glass reads as glass (softbox highlights on
+// the dome, a bright rim at grazing angles) without greying the dial, which a less transparent glass would do.
+// glTF has no additive blending; loadWatch restores it on models saved with this material.
+export const GLASS_REFLECTION = 'GlassReflection';
+export function createGlassReflection({ strength = 1 } = {}) {
+  return new THREE.MeshPhysicalMaterial({
+    name: GLASS_REFLECTION,
+    color: 0x000000,
+    metalness: 0,
+    roughness: 0.02,
+    ior: 1.77,
+    specularIntensity: 1,
+    specularColor: 0xdfe8ff, // the faint blue of the anti-reflective coating
+    envMapIntensity: strength,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+}
+
+// Glass mesh plus its reflection layer sharing the geometry
+export function withReflection(mesh, options) {
+  const layer = new THREE.Mesh(mesh.geometry, createGlassReflection(options));
+  layer.name = `${mesh.name}Reflection`;
+  // envMapIntensity is not part of glTF; kept in extras so a saved model reflects as strongly as the built one
+  layer.userData.reflectionStrength = layer.material.envMapIntensity;
+  layer.renderOrder = mesh.renderOrder + 1;
+  mesh.add(layer);
+  return mesh;
+}
+
 // Dark, satin dial: not mirror-like, sunburst and grain come from the texture
 export function createDial(texture) {
   return new THREE.MeshPhysicalMaterial({

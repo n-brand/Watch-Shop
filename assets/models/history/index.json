@@ -160,5 +160,23 @@
     "note": "Lumen: Gravur «DESIGN NICOLAS BRAND» auf dem Gehäuseboden",
     "bytes": 437400,
     "thumb": "v019.webp"
+  },
+  {
+    "id": "v020",
+    "model": "meridian",
+    "file": "v020.glb",
+    "date": "2026-10-23T20:45:13.030Z",
+    "note": "Meridian: Gläser sichtbar (Spiegelschicht mit eigener Reflexionsumgebung: feiner Schleier, Lichtstreifen, Glassaum), Kreisschliff als anisotrope Reflexion (kein Dreieck mehr auf der Rotornabe), Schrauben in Senkungen auf Brücken und Rotornabe, Werkhaltering zwischen Werk und Gehäuse",
+    "bytes": 2296824,
+    "thumb": "v020.webp"
+  },
+  {
+    "id": "v021",
+    "model": "lumen",
+    "file": "v021.glb",
+    "date": "2026-10-23T20:45:15.884Z",
+    "note": "Lumen: Glas sichtbar (Spiegelschicht mit eigener Reflexionsumgebung)",
+    "bytes": 1285048,
+    "thumb": "v021.webp"
   }
 ]

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { WATCH_PARTS, MATERIAL_NAMES } from '../config.js';
 import {
-  METALS, createMetal, createGlass, createDial, createDialTexture, createLeather, createLeatherEdge, createStitch,
+  METALS, createMetal, createGlass, withReflection, createDial, createDialTexture, createLeather, createLeatherEdge, createStitch,
   LEATHER_TILE, assignWorldUVs,
 } from './materials.js';
 import { CRYSTALS } from '../logo/crystals.js';
@@ -295,7 +295,7 @@ function buildGlass() {
   const mesh = new THREE.Mesh(geo, createGlass());
   mesh.name = WATCH_PARTS.glass;
   mesh.renderOrder = 2;
-  return mesh;
+  return withReflection(mesh);
 }
 
 // Exhibition caseback: the OR-01 movement (see movement.js) with its rotor, behind a sapphire window, all facing -Z
@@ -307,7 +307,8 @@ function buildCaseback() {
   // Flat sapphire: a touch more reflective than the domed front crystal, so it reads as glass from behind
   const glass = createGlass();
   glass.specularIntensity = 0.28;
-  group.add(movement, rotor, buildCasebackGlass(glass));
+  // Weaker reflection layer than on the front: a flat window seen square-on veiled the movement in a milky blue
+  group.add(movement, rotor, withReflection(buildCasebackGlass(glass), { strength: 0.45 }));
   return group;
 }
 
