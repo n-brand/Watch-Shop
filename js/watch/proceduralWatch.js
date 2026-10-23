@@ -38,10 +38,19 @@ export function shadowed(mesh) {
 
 // Lathe around the dial axis. Profile points [r, z] must run counter-clockwise around the solid's
 // cross-section (outward along the bottom, up the outside, inward along the top) so normals face out.
+// UVs: the lathe's own (u around the axis, v along the profile), scaled to ~24 mm per tile like assignWorldUVs.
+// Brushing then runs around the circle, as on a turned part; the per-vertex axis projection of assignWorldUVs
+// flipped between neighbouring vertices on 45° chamfers and showed as a sawtooth band.
 function lathe(points, segments = 192) {
   const geo = new THREE.LatheGeometry(points.map(([r, z]) => new THREE.Vector2(r, z)), segments);
   geo.rotateX(Math.PI / 2);
-  return assignWorldUVs(geo);
+  const meanR = points.reduce((sum, [r]) => sum + r, 0) / points.length;
+  const tilesAround = Math.max(1, Math.round((2 * Math.PI * meanR) / 24)); // whole tiles, so there is no seam
+  let profileLength = 0;
+  for (let i = 1; i < points.length; i++) profileLength += Math.hypot(points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1]);
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * tilesAround, (uv.getY(i) * profileLength) / 24);
+  return geo;
 }
 
 // Extrudes a side profile: shape x -> world Y (length), shape y -> world Z (height), extrusion -> world X (width).

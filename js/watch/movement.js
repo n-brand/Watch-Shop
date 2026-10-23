@@ -606,14 +606,28 @@ function buildPlates(m) {
 // Casing ring: a solid ring from the base plate up to just under the glass, holding the movement in the case.
 // Its inner wall (frosted ruthenium like the plate) and polished top edge close the gap between movement and
 // case, which otherwise read as empty space; the rotor (r 10.45) turns freely inside it.
+// It is stepped: the inner part stays below the sapphire, the outer part (outside the glass, r > 11.45) reaches
+// up to just under the caseback and out to the middle case. The case itself is a thin outer skin, so without
+// the outer part one could look sideways under the caseback into the hollow case (crown stem, lug insides).
+const RING_STEP = 11.45; // just outside the caseback glass (r 11.35)
 function buildCasingRing(m) {
   const group = new THREE.Group();
   group.name = 'CasingRing';
-  const ring = new THREE.Shape().absarc(0, 0, 11.4, 0, Math.PI * 2, false);
-  ring.holes.push(new THREE.Path().absarc(0, 0, RING_INNER, 0, Math.PI * 2, true));
-  group.add(solid(ring, Z.base + 0.3, Z.glassInner + 0.2, m.plate, m.bevel, {
-    bevel: 0.12, bevelSegments: 3, curveSegments: 160, uvs: { tile: getFinishes().frost.tile },
+  const annulus = (r0, r1) => {
+    const s = new THREE.Shape().absarc(0, 0, r1, 0, Math.PI * 2, false);
+    s.holes.push(new THREE.Path().absarc(0, 0, r0, 0, Math.PI * 2, true));
+    return s;
+  };
+  const frost = { tile: getFinishes().frost.tile };
+  group.add(solid(annulus(RING_INNER, RING_STEP + 0.05), Z.base + 0.3, Z.glassInner + 0.2, m.plate, m.bevel, {
+    bevel: 0.12, bevelSegments: 3, curveSegments: 160, uvs: frost,
   }));
+  // The outer part only closes the view; it casts no shadow (its shadow edge stepped along the window rim)
+  const outer = solid(annulus(RING_STEP, 17.55), Z.base + 0.3, -4.92, m.plate, m.plate, {
+    bevel: 0.04, bevelSegments: 1, curveSegments: 160, uvs: frost,
+  });
+  outer.castShadow = false;
+  group.add(outer);
   return group;
 }
 
@@ -664,16 +678,16 @@ function buildBarrel(m, wCenter) {
 
   // Cross bridge over the barrel: two arms crossing at the barrel arbor, plus an arm to the crown wheel
   const field = sdf.smoothUnion(0.7,
-    sdf.capsule(v2(-9.4, 4.45), v2(-0.6, 0.9), 0.75),
+    sdf.capsule(v2(-8.75, 4.1), v2(-0.6, 0.9), 0.75),
     sdf.capsule(v2(-6.9, -1.4), v2(-2.2, 6.6), 0.75),
     sdf.circle(POS.barrel, 1.25),
     sdf.capsule(POS.barrel, POS.crown, 0.8),
     sdf.circle(POS.crown, 0.95),
-    sdf.circle(v2(-9.0, 4.3), 1.0),
+    sdf.circle(v2(-8.75, 4.1), 0.8),
     sdf.circle(v2(-6.7, -1.2), 0.95),
   );
   group.add(bridge(m, field, bounds(-11.2, -3, 1, 9, 0.04), Z.bridgeBottom, Z.bridgeTop, {
-    name: 'BarrelBridge', screws: [{ x: -9.0, y: 4.3, angle: 0.3 }, { x: -6.7, y: -1.2, angle: 1.9 }],
+    name: 'BarrelBridge', screws: [{ x: -8.75, y: 4.1, angle: 0.3 }, { x: -6.7, y: -1.2, angle: 1.9 }],
   }));
 
   // Large ratchet wheel with six spokes on top: satin steel, polished bevel; the bridge shows between its spokes
@@ -690,7 +704,7 @@ function buildBarrel(m, wCenter) {
   group.add(crown, screw(m.screw, POS.crown.x, POS.crown.y, top - 0.14, { r: 0.4, slotAngle: 1.2 }));
 
   // Click: the pawl that keeps the ratchet from unwinding; it pivots on the bridge arm just outside the ratchet
-  const toFoot = v2(-9.4, 4.45).sub(POS.barrel).normalize();
+  const toFoot = v2(-8.75, 4.1).sub(POS.barrel).normalize();
   const clickAt = POS.barrel.clone().addScaledVector(toFoot, RATCHET_R + 0.75);
   const tip = POS.barrel.clone().addScaledVector(toFoot.clone().rotateAround(v2(0, 0), 0.22), RATCHET_R - 0.08);
   for (const shape of shapeFromSdf(sdf.smoothUnion(0.3, sdf.capsule(clickAt, tip, 0.22), sdf.circle(clickAt, 0.45)),
@@ -704,21 +718,22 @@ function buildBarrel(m, wCenter) {
 function buildTrainBridge(m) {
   const group = new THREE.Group();
   const footA = v2(8.7, -1.3);
-  const footB = v2(6.6, -7.3);
+  const footB = v2(6.4, -7.05);
   const field = sdf.smoothUnion(0.6,
     sdf.capsule(POS.third, POS.fourth, 0.65),
     sdf.capsule(POS.fourth, POS.escape, 0.6),
     sdf.capsule(POS.third, footA, 0.85),
     sdf.capsule(POS.fourth, footB, 0.85),
     sdf.circle(POS.third, 0.85), sdf.circle(POS.fourth, 0.85), sdf.circle(POS.escape, 0.75),
-    sdf.circle(footA, 1.05), sdf.circle(footB, 1.05),
+    sdf.circle(footA, 1.05), sdf.circle(footB, 0.9),
   );
   group.add(bridge(m, field, bounds(-1.5, -9.5, 11, 0.5, 0.04), Z.bridgeBottom, Z.bridgeTop, {
     name: 'TrainBridge', screws: [{ x: footA.x, y: footA.y, angle: 0.8 }, { x: footB.x, y: footB.y, angle: 2.4 }],
   }));
   for (const p of [POS.third, POS.fourth, POS.escape]) group.add(jewel(m, p.x, p.y, Z.bridgeTop, 0.9));
   const along = Math.atan2(footA.y - POS.third.y, footA.x - POS.third.x);
-  group.add(engraving('ORVANE  CAL. OR-01', (POS.third.x + footA.x) / 2 + 0.25, (POS.third.y + footA.y) / 2 + 0.05, Z.bridgeTop, along + Math.PI, 0.42));
+  // Centred between the foot screw and the third-wheel jewel; 0.3 mm letters fit the ~3.9 mm between them
+  group.add(engraving('ORVANE  CAL. OR-01', (POS.third.x + footA.x) / 2, (POS.third.y + footA.y) / 2, Z.bridgeTop, along + Math.PI, 0.3));
   const alongB = Math.atan2(footB.y - POS.fourth.y, footB.x - POS.fourth.x);
   group.add(engraving('31 JEWELS', (POS.fourth.x + footB.x) / 2 + 0.1, (POS.fourth.y + footB.y) / 2, Z.bridgeTop, alongB + Math.PI, 0.4));
   return group;
@@ -728,12 +743,12 @@ function buildTrainBridge(m) {
 function buildAutomaticBridge(m) {
   const group = new THREE.Group();
   const footA = v2(5.6, 7.7);
-  const footB = v2(1.0, 9.75);
+  const footB = v2(0.95, 9.55);
   const field = sdf.smoothUnion(0.7,
     sdf.ring(POS.center, 1.2, 2.25),
     sdf.capsule(POS.center, footA, 0.75),
     sdf.capsule(POS.center, footB, 0.7),
-    sdf.circle(footA, 0.95), sdf.circle(footB, 0.9),
+    sdf.circle(footA, 0.95), sdf.circle(footB, 0.85),
   );
   group.add(bridge(m, sdf.subtract(field, sdf.circle(POS.center, 1.15)), bounds(-3, -3, 8, 11.2, 0.04), Z.bridgeBottom, Z.bridgeTop, {
     name: 'AutomaticBridge', screws: [{ x: footA.x, y: footA.y, angle: 0.3 }, { x: footB.x, y: footB.y, angle: 1.7 }],
@@ -775,8 +790,8 @@ function buildBalance(m) {
 
   // Balance cock: one-armed bridge from its foot near the rim to the balance staff, standing taller than
   // the other bridges; cap jewel over the staff, foot screw near the rim
-  const foot = v2(-6.8, -7.3);
-  const field = sdf.smoothUnion(0.8, sdf.capsule(foot, POS.balance, 0.62), sdf.circle(POS.balance, 0.95), sdf.circle(foot, 1.35));
+  const foot = v2(-6.55, -7.0);
+  const field = sdf.smoothUnion(0.8, sdf.capsule(foot, POS.balance, 0.62), sdf.circle(POS.balance, 0.95), sdf.circle(foot, 0.85));
   group.add(bridge(m, field, bounds(-11.2, -11.2, -3, -4, 0.04), Z.bridgeBottom, Z.cockTop, {
     name: 'BalanceCock', bevel: 0.14, screws: [{ x: foot.x, y: foot.y, angle: 0.9 }],
   }));

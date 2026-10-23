@@ -178,5 +178,14 @@
     "note": "Lumen: Glas sichtbar (Spiegelschicht mit eigener Reflexionsumgebung)",
     "bytes": 1285048,
     "thumb": "v021.webp"
+  },
+  {
+    "id": "v022",
+    "model": "meridian",
+    "file": "v022.glb",
+    "date": "2026-10-23T21:04:05.938Z",
+    "note": "Meridian: Werkhaltering gestuft bis zur Gehäusewand (kein Blick mehr unter den Boden auf Kronenwelle und Bandanstösse), Brückenfüsse vollständig vor dem Ring statt abgeschnitten, Kaliber-Gravur passend zwischen Schraube und Lagerstein, gedrehte Teile mit umlaufendem Schliff (kein Sägezahnmuster auf der Bodenfase)",
+    "bytes": 2343560,
+    "thumb": "v022.webp"
   }
 ]
