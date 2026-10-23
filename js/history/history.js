@@ -1,13 +1,10 @@
 import { createViewer } from '../scene.js';
-import { MODELS, DEFAULT_MODEL } from '../config.js';
+import { modelOf, modelLabel, nameVersions } from './versionNames.js';
 
 const HISTORY_URL = 'assets/models/history/';
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const dateFormat = new Intl.DateTimeFormat('de-CH', { dateStyle: 'medium', timeStyle: 'short' });
 const sizeFormat = (bytes) => `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-// Entries saved before there was more than one model have no model field: they are Meridian versions
-const modelOf = (v) => v.model ?? DEFAULT_MODEL;
-const modelLabel = (id) => MODELS[id]?.label ?? id;
 
 const $ = (id) => document.getElementById(id);
 const gridView = $('grid-view');
@@ -22,7 +19,7 @@ async function loadIndex() {
   }
 }
 
-const versions = await loadIndex();
+const versions = nameVersions(await loadIndex());
 window.orvaneVersions = versions;
 
 // Model filter: 'all' or a model id; the detail view steps through the filtered list
@@ -63,10 +60,10 @@ function renderGrid() {
   $('version-grid').replaceChildren(...[...list].reverse().map((v) => {
     const li = document.createElement('li');
     li.innerHTML = `
-      <a class="version-card" href="#${v.id}">
+      <a class="version-card" href="#${v.slug}">
         <span class="version-thumb"><img alt="" width="640" height="800" loading="lazy" decoding="async"></span>
         <span class="version-body">
-          <span class="version-head"><span class="version-id"></span><span class="version-model"></span></span>
+          <span class="version-head"><span class="version-id"></span></span>
           <span class="version-date"></span>
           <span class="version-note"></span>
         </span>
@@ -74,11 +71,10 @@ function renderGrid() {
     const img = li.querySelector('img');
     img.src = v.thumb ? `${HISTORY_URL}${v.thumb}` : 'assets/img/logo.svg';
     if (!v.thumb) img.classList.add('is-placeholder');
-    li.querySelector('.version-id').textContent = v.id;
-    li.querySelector('.version-model').textContent = modelLabel(modelOf(v));
+    li.querySelector('.version-id').textContent = v.name;
     li.querySelector('.version-date').textContent = `${dateFormat.format(new Date(v.date))} · ${sizeFormat(v.bytes)}`;
     li.querySelector('.version-note').textContent = v.note || '(ohne Beschreibung)';
-    li.querySelector('a').setAttribute('aria-label', `${v.id}, ${modelLabel(modelOf(v))}: ${v.note}`);
+    li.querySelector('a').setAttribute('aria-label', `${v.name}: ${v.note}`);
     return li;
   }));
 }
@@ -101,9 +97,9 @@ async function showDetail(v) {
 
   const prev = list[index - 1];
   const next = list[index + 1];
-  const label = modelLabel(modelOf(v));
-  $('detail-position').textContent = `${label} · Version ${index + 1} von ${list.length}`;
-  $('detail-id').textContent = v.id;
+  const ofModel = versions.filter((x) => modelOf(x) === modelOf(v)).length;
+  $('detail-position').textContent = `${modelLabel(modelOf(v))} · Version ${v.number} von ${ofModel}`;
+  $('detail-id').textContent = v.name;
   $('detail-date').textContent = dateFormat.format(new Date(v.date));
   $('detail-note').textContent = v.note || '(ohne Beschreibung)';
   $('detail-size').textContent = sizeFormat(v.bytes);
@@ -111,12 +107,12 @@ async function showDetail(v) {
   $('detail-config').textContent = `MODEL_PATH = './${HISTORY_URL}${v.file}'`;
   $('detail-prev').disabled = !prev;
   $('detail-next').disabled = !next;
-  $('detail-prev-label').textContent = prev ? ` ${prev.id}` : '';
-  $('detail-next-label').textContent = next ? `${next.id} ` : '';
+  $('detail-prev-label').textContent = prev ? ` ${prev.name}` : '';
+  $('detail-next-label').textContent = next ? `${next.name} ` : '';
   $('lightbox-prev').disabled = !prev;
   $('lightbox-next').disabled = !next;
-  $('lightbox-title').textContent = `${v.id} · ${label} · ${index + 1} / ${list.length}`;
-  document.title = `Orvane – Verlauf ${v.id}`;
+  $('lightbox-title').textContent = `${v.name} · ${index + 1} / ${list.length}`;
+  document.title = `Orvane – Verlauf ${v.name}`;
 
   const path = `${HISTORY_URL}${v.file}`;
   $('detail-loading').hidden = false;
@@ -159,11 +155,14 @@ function showGrid() {
 }
 
 function route() {
-  const v = versions.find((x) => `#${x.id}` === location.hash);
+  // Links name a version per model (#meridian-21); old links with the file id (#v027) still work
+  const hash = decodeURIComponent(location.hash.slice(1));
+  const v = versions.find((x) => x.slug === hash) ?? versions.find((x) => x.id === hash);
+  if (v && hash !== v.slug) history.replaceState(null, '', `#${v.slug}`);
   if (!v) {
     const from = current;
     showGrid();
-    if (from) document.querySelector(`.version-card[href="#${from.id}"]`)?.focus();
+    if (from) document.querySelector(`.version-card[href="#${from.slug}"]`)?.focus();
   } else {
     // Detail view always starts at the top, not at the grid's scroll position
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -178,7 +177,7 @@ function route() {
 const go = (step) => {
   const list = shown();
   const target = list[list.indexOf(current) + step];
-  if (target) location.hash = target.id;
+  if (target) location.hash = target.slug;
 };
 
 $('detail-prev').addEventListener('click', () => go(-1));

@@ -473,7 +473,6 @@ main { overflow-x: clip; }
 .version-body { display: grid; gap: 0.2rem; padding: 1rem 1.1rem 1.25rem; }
 .version-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
 .version-id { font-family: var(--font-display); font-size: 1.6rem; color: var(--gold-soft); line-height: 1; }
-.version-model { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); }
 .version-date { font-size: 0.72rem; color: var(--text-muted); }
 .version-note { font-size: 0.85rem; margin-top: 0.4rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 

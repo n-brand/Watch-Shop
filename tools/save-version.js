@@ -4,6 +4,7 @@
 import { createViewer } from '../js/scene.js';
 import { MODELS, DEFAULT_MODEL } from '../js/config.js';
 import { saveVersion } from '../js/history/saveVersion.js';
+import { nameVersions } from '../js/history/versionNames.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -41,7 +42,9 @@ save.addEventListener('click', async () => {
   status.textContent = 'Speichere …';
   try {
     const entry = await saveVersion(viewer, note, { model });
-    status.textContent = `Gespeichert als ${entry.id}.`;
+    // Shown with its per-model number (e.g. "Meridian 22"), as in the history
+    const index = nameVersions(await (await fetch('../assets/models/history/index.json', { cache: 'no-store' })).json());
+    status.textContent = `Gespeichert als ${index.find((v) => v.id === entry.id)?.name ?? entry.id}.`;
     $('note').value = '';
   } catch (err) {
     status.textContent = `Fehler: ${err.message}`;

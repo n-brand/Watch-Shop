@@ -29,7 +29,7 @@ Danach `bytes` des Eintrags in `assets/models/history/index.json` anpassen.
 
 - `index.html` – Shop mit Produktbildern, Story, Details und Konfigurator; im Konfigurator Modell per Dropdown wählen (Meridian, Lumen), bei der Meridian die Zifferblattfarbe, und die Uhr in 3D drehen (three.js lädt erst, wenn der Konfigurator in Sicht kommt)
 - `tests.html` – interne Experimente, z. B. das Lumen-Display nur mit HTML/CSS
-- `history.html` – Modell-Verlauf aller gespeicherten Uhrenversionen (glb) mit drehbarer 3D-Detailansicht, Filter nach Modell (Meridian, Lumen), auf dem Handy als Vollbild mit Pfeilen
+- `history.html` – Modell-Verlauf aller gespeicherten Uhrenversionen (glb) mit drehbarer 3D-Detailansicht, Filter nach Modell (Meridian, Lumen), auf dem Handy als Vollbild mit Pfeilen. Versionen sind pro Modell nummeriert (Meridian 1, 2, 3 …, Lumen 1, 2 …), Links lauten z. B. `history.html#meridian-21`
 - `logos.html` – Entwürfe des Orvane-Kristalls in 2D und 3D
 
 ## Aufbau
@@ -38,7 +38,7 @@ Danach `bytes` des Eintrags in `assets/models/history/index.json` anpassen.
 - `js/logo/` – der Orvane-Kristall als 3D-Facetten (SVG-Logo und 3D-Modell aus derselben Definition)
 - `js/scene.js`, `js/studio.js` – 3D-Ansicht, Studio-Licht, Kamera (Verlauf und Render-Werkzeug)
 - `assets/img/renders/` – Produktbilder der Uhren (WebP, transparenter Hintergrund), pro Modell, Gehäuse und Armband
-- `assets/models/history/` – gespeicherte Versionen (`vNNN.glb`, Vorschaubilder, `index.json`)
+- `assets/models/history/` – gespeicherte Versionen (`vNNN.glb`, Vorschaubilder, `index.json`); der Dateiname zählt über alle Modelle und bleibt fest, angezeigt wird die Nummer pro Modell (`js/history/versionNames.js`)
 - `server.js` – kleiner lokaler Server; speichert neue Versionen über `/api/versions`, komprimiert mit `tools/compress-glb.js` (Meshopt, WebP; auch einzeln: `node tools/compress-glb.js in.glb out.glb`)
 - `sw.js`, `manifest.webmanifest`, `assets/icons/` – PWA / Offline
 - `tools/` – Hilfsskripte (Platzhalterbilder, App-Icons) und `render-stills.html`: rendert die Produktbilder neu, wenn sich die Uhr ändert (lokal unter http://127.0.0.1:5173/tools/render-stills.html, speichert über `/api/renders`)

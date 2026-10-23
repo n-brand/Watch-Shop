@@ -6,7 +6,7 @@
 // CDN libraries and fonts: cache first (their URLs are version-pinned and never change).
 // Bump VERSION when the precache list changes.
 // All paths are relative to this file, so the app also works in a sub-folder (e.g. GitHub Pages /Watch-Shop/).
-const VERSION = 'orvane-v19';
+const VERSION = 'orvane-v20';
 const HISTORY_URL = './assets/models/history/';
 
 const CDN_THREE = 'https://cdn.jsdelivr.net/npm/three@0.169.0';
@@ -23,7 +23,7 @@ const PRECACHE = [
   './js/watch/loadWatch.js', './js/watch/materials.js', './js/watch/proceduralWatch.js',
   './js/watch/digitalWatch.js', './js/watch/digitalDisplay.js', './js/watch/look.js', './js/watch/movement.js',
   './js/logo/crystals.js', './js/logo/crystalMesh.js', './js/logo/logos-page.js',
-  './js/history/history.js', './js/history/saveVersion.js', './js/tests/css-clock.js',
+  './js/history/history.js', './js/history/saveVersion.js', './js/history/versionNames.js', './js/tests/css-clock.js',
   ...['hero', 'case', 'glass', 'movement', 'profile'].map((name) => `./assets/img/renders/${name}.webp`),
   // Configurator stills: model x case x strap, the Meridian also per dial colour (the royal-blue standard has no suffix)
   ...['meridian', 'lumen'].flatMap((m) => ['rose', 'yellow', 'steel'].flatMap((c) => ['bracelet', 'leather-brown', 'leather-black']
