@@ -287,7 +287,188 @@ function buildGlass() {
   return mesh;
 }
 
-// Exhibition caseback: movement disc, rotor and sapphire window, all facing -Z
+// ---------------------------------------------------------------- movement (seen through the caseback)
+
+// Wheel outline in XY: `teeth` teeth on radius r (0 = plain rim), optional spokes cut out between hub and rim.
+// ratchet: sawtooth teeth as on a ratchet wheel.
+function wheelShape(r, teeth, { tooth = 0.16, spokes = 0, hub = 0.55, rim = 0.32, spokeW = 0.26, ratchet = false } = {}) {
+  const s = new THREE.Shape();
+  if (teeth) {
+    const root = r - tooth;
+    const pitch = (Math.PI * 2) / teeth;
+    for (let i = 0; i < teeth; i++) {
+      const a = i * pitch;
+      const pts = ratchet
+        ? [[root, a], [r, a + pitch * 0.85], [root, a + pitch * 0.9]]
+        : [[root, a], [r, a + pitch * 0.14], [r, a + pitch * 0.4], [root, a + pitch * 0.54]];
+      pts.forEach(([rad, ang], k) => {
+        const x = Math.cos(ang) * rad;
+        const y = Math.sin(ang) * rad;
+        if (i === 0 && k === 0) s.moveTo(x, y);
+        else s.lineTo(x, y);
+      });
+    }
+    s.closePath();
+  } else {
+    s.absarc(0, 0, r, 0, Math.PI * 2, false);
+  }
+  if (spokes) {
+    const outer = r - tooth - rim;
+    const half = spokeW / 2;
+    for (let k = 0; k < spokes; k++) {
+      const a0 = (k / spokes) * Math.PI * 2;
+      const a1 = ((k + 1) / spokes) * Math.PI * 2;
+      // Window between two spokes; the spoke edges are kept parallel by offsetting the angle per radius
+      const hole = new THREE.Path();
+      hole.moveTo(Math.cos(a0 + half / hub) * hub, Math.sin(a0 + half / hub) * hub);
+      hole.lineTo(Math.cos(a0 + half / outer) * outer, Math.sin(a0 + half / outer) * outer);
+      hole.absarc(0, 0, outer, a0 + half / outer, a1 - half / outer, false);
+      hole.lineTo(Math.cos(a1 - half / hub) * hub, Math.sin(a1 - half / hub) * hub);
+      hole.absarc(0, 0, hub, a1 - half / hub, a0 + half / hub, true);
+      s.holes.push(hole);
+    }
+  }
+  return s;
+}
+
+// Thin plate from a shape, spanning z0 (towards the dial) to z0 - depth (towards the caseback window)
+function plate(shape, z0, depth, material) {
+  const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 8 });
+  geo.translate(0, 0, z0 - depth);
+  return shadowed(new THREE.Mesh(assignWorldUVs(geo), material));
+}
+
+// Gear train of the OR-01 between the movement plate (z -4.6) and the rotor (z -4.95), seen through the caseback.
+// Wheels mesh with the next arbor's pinion and sit on two levels so overlapping wheels never touch.
+// userData.spin (rad/s) and userData.swing ({ amp, hz }) are animated by the viewer and survive glTF export as extras.
+// The fourth wheel turns once a minute (it carries the seconds hand); ratios follow the radii.
+const L1 = -4.64; // lower wheel level
+const L2 = -4.74; // upper wheel level
+const BALANCE = { x: -4.63, y: -5.52 }; // over the balance recess drawn on the movement plate
+function buildMovement() {
+  const group = new THREE.Group();
+  group.name = 'Movement';
+  const gilt = new THREE.MeshPhysicalMaterial({ name: 'Wheel', color: 0xe6c483, metalness: 1, roughness: 0.3 });
+  const steel = new THREE.MeshPhysicalMaterial({ name: 'Steel', color: 0xcfd3d8, metalness: 1, roughness: 0.22 });
+  const blued = new THREE.MeshPhysicalMaterial({ name: 'BluedSteel', color: 0x203f8f, metalness: 0.9, roughness: 0.3 });
+  // Large flat steel faces mirror the bright softboxes; a darker, satin finish keeps the ratchet from glaring white
+  const ratchetSteel = new THREE.MeshPhysicalMaterial({ name: 'RatchetSteel', color: 0x8d939b, metalness: 1, roughness: 0.42 });
+  const ruby = new THREE.MeshPhysicalMaterial({ name: 'Ruby', color: 0x9b1730, metalness: 0, roughness: 0.08, clearcoat: 1 });
+  const bridgeMetal = createMetal(0xc6cad0, { brushed: true });
+  bridgeMetal.name = 'Bridge';
+
+  const jewel = (x, y, z) => {
+    const chaton = new THREE.Mesh(assignWorldUVs(new THREE.CylinderGeometry(0.42, 0.42, 0.05, 24).rotateX(Math.PI / 2)), gilt);
+    const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.06, 20).rotateX(Math.PI / 2), ruby);
+    chaton.position.set(x, y, z);
+    stone.position.set(x, y, z - 0.02);
+    return [chaton, stone];
+  };
+
+  // Arbors: [name, x, y, wheel radius, teeth, spokes, wheel level, pinion radius, pinion level, spin rad/s]
+  const SECONDS = (Math.PI * 2) / 60;
+  const center = { R: 3.6, p: 0.6 };
+  const third = { R: 2.9, p: 0.55 };
+  const fourth = { R: 2.4, p: 0.5 };
+  const escape = { R: 1.5, p: 0.45 };
+  const wCenter = -SECONDS * (third.p / third.R) * (fourth.p / center.R);
+  const wThird = -wCenter * (center.R / third.p);
+  const wFourth = SECONDS;
+  const wEscape = -wFourth * (fourth.R / escape.p);
+  const ARBORS = [
+    ['CenterWheel', 0, 0, center.R, 80, 5, L1, center.p, L2, wCenter],
+    ['ThirdWheel', 3.64, -2.1, third.R, 72, 5, L2, third.p, L1, wThird],
+    ['FourthWheel', 3.04, -5.5, fourth.R, 70, 4, L1, fourth.p, L2, wFourth],
+    ['EscapeWheel', 0.19, -5.5, escape.R, 15, 3, L2, escape.p, L1, wEscape],
+  ];
+  for (const [name, x, y, R, teeth, spokes, level, p, pLevel, spin] of ARBORS) {
+    const arbor = new THREE.Group();
+    arbor.name = name;
+    arbor.position.set(x, y, 0);
+    arbor.userData.spin = spin;
+    const tooth = name === 'EscapeWheel' ? 0.32 : 0.16;
+    arbor.add(plate(wheelShape(R, teeth, { tooth, spokes, hub: Math.min(0.55, R * 0.3) }), level, 0.08, gilt));
+    arbor.add(plate(wheelShape(p, 8, { tooth: 0.14 }), pLevel, 0.08, steel));
+    const axle = new THREE.Mesh(assignWorldUVs(new THREE.CylinderGeometry(0.18, 0.18, 0.3, 16).rotateX(Math.PI / 2)), steel);
+    axle.position.z = -4.72;
+    arbor.add(axle);
+    group.add(arbor);
+    if (name !== 'CenterWheel') group.add(...jewel(x, y, -4.86)); // the centre arbor sits under the rotor hub
+  }
+
+  // Barrel with the mainspring: big toothed drum driving the centre pinion, ratchet wheel and screw on top
+  const barrel = new THREE.Group();
+  barrel.name = 'Barrel';
+  barrel.position.set(-4.16, 2.4, 0);
+  barrel.userData.spin = -wCenter * (center.p / 4.2);
+  barrel.add(plate(wheelShape(4.2, 96, { tooth: 0.18 }), L2 + 0.02, 0.14, gilt));
+  // Ratchet and blued screw stay just below the rotor plane (z -4.95), which sweeps over them
+  barrel.add(plate(wheelShape(2.8, 40, { tooth: 0.22, ratchet: true, spokes: 0 }), -4.86, 0.05, ratchetSteel));
+  const screw = new THREE.Mesh(assignWorldUVs(new THREE.CylinderGeometry(0.6, 0.6, 0.03, 24).rotateX(Math.PI / 2)), blued);
+  screw.position.z = -4.925;
+  barrel.add(screw);
+  group.add(barrel);
+
+  // Balance wheel with blued hairspring, swinging at 4 Hz (28'800 A/h)
+  const balance = new THREE.Group();
+  balance.name = 'Balance';
+  balance.position.set(BALANCE.x, BALANCE.y, 0);
+  balance.userData.swing = { amp: 1.4, hz: 4 };
+  balance.add(plate(wheelShape(2.05, 0, { tooth: 0, spokes: 3, hub: 0.35, rim: 0.3, spokeW: 0.22 }), -4.76, 0.1, gilt));
+  const spiral = [];
+  for (let i = 0; i <= 600; i++) {
+    const k = i / 600;
+    const a = k * Math.PI * 2 * 9;
+    const rr = 0.42 + k * 1.05;
+    spiral.push(new THREE.Vector3(Math.cos(a) * rr, Math.sin(a) * rr, -4.8));
+  }
+  balance.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(spiral), 900, 0.022, 4), blued));
+  group.add(balance);
+
+  // Pallet lever between escape wheel and balance, with its two red pallet stones; it flicks with the balance
+  const lever = new THREE.Group();
+  lever.name = 'PalletLever';
+  lever.position.set(-1.6, -5.55, 0);
+  lever.userData.swing = { amp: 0.12, hz: 4 };
+  const leverShape = new THREE.Shape();
+  leverShape.moveTo(-1.1, -0.12);
+  leverShape.lineTo(1.1, -0.12);
+  leverShape.lineTo(1.1, 0.12);
+  leverShape.lineTo(-1.1, 0.12);
+  leverShape.closePath();
+  lever.add(plate(leverShape, L2 + 0.02, 0.07, steel));
+  for (const px of [0.75, 1.05]) {
+    const stone = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.3, 0.08), ruby);
+    stone.position.set(px, 0.2 * (px > 1 ? -1 : 1), L2 - 0.02);
+    lever.add(stone);
+  }
+  group.add(lever);
+
+  // Balance cock: bridge from the rim to the balance staff, flaring towards its screw foot with concave flanks,
+  // a round end over the staff, and the cap jewel on top
+  const u = new THREE.Vector2(BALANCE.x, BALANCE.y).normalize();
+  const n = new THREE.Vector2(-u.y, u.x);
+  const at = (base, along, side) => new THREE.Vector2(base.x + u.x * along + n.x * side, base.y + u.y * along + n.y * side);
+  const b = new THREE.Vector2(BALANCE.x, BALANCE.y);
+  const foot = at(b, 3.2, 0); // towards the rim, outside the balance
+  const cap = 0.75;
+  const capAngle = Math.atan2(n.y, n.x);
+  const cock = new THREE.Shape();
+  cock.moveTo(...at(foot, 0.6, -1.6).toArray());
+  cock.quadraticCurveTo(...at(b, 1.6, -0.45).toArray(), ...at(b, 0, -cap).toArray());
+  cock.absarc(b.x, b.y, cap, capAngle + Math.PI, capAngle, false);
+  cock.quadraticCurveTo(...at(b, 1.6, 0.45).toArray(), ...at(foot, 0.6, 1.6).toArray());
+  cock.absarc(foot.x + u.x * 0.6, foot.y + u.y * 0.6, 1.6, capAngle, capAngle + Math.PI, false);
+  group.add(plate(cock, -4.87, 0.04, bridgeMetal));
+  // Polished screw holding the cock
+  const cockScrew = new THREE.Mesh(assignWorldUVs(new THREE.CylinderGeometry(0.45, 0.45, 0.03, 24).rotateX(Math.PI / 2)), blued);
+  cockScrew.position.set(foot.x + u.x * 0.6, foot.y + u.y * 0.6, -4.925);
+  group.add(cockScrew);
+  group.add(...jewel(b.x, b.y, -4.92));
+  return group;
+}
+
+// Exhibition caseback: movement disc, gear train, rotor and sapphire window, all facing -Z
 function buildCaseback(movementTexture) {
   const group = new THREE.Group();
   group.name = 'Caseback';
@@ -313,7 +494,7 @@ function buildCaseback(movementTexture) {
   const sapphire = new THREE.Mesh(windowGeo, createGlass());
   sapphire.position.z = -5.3;
 
-  group.add(movement, rotor, sapphire);
+  group.add(movement, buildMovement(), rotor, sapphire);
   return group;
 }
 

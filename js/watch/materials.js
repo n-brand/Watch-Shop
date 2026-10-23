@@ -180,19 +180,14 @@ export function createMovementTexture() {
   ctx.bezierCurveTo(c - 120, c - 120, c + 160, c - 300, c + 330, c - 170);
   ctx.stroke();
 
-  // Balance wheel recess
+  // Balance wheel recess (the balance itself is a 3D part, see buildMovement)
   ctx.fillStyle = '#2b2d31';
   ctx.beginPath();
   ctx.arc(c + 210, c + 250, 120, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = '#d8b46a';
-  ctx.lineWidth = 14;
-  ctx.beginPath();
-  ctx.arc(c + 210, c + 250, 92, 0, Math.PI * 2);
-  ctx.stroke();
 
-  // Jewels in gold chatons, blued screws
-  const jewels = [[c, c], [c - 220, c - 90], [c + 120, c - 210], [c + 210, c + 250], [c - 150, c + 230], [c + 300, c - 40]];
+  // Jewels in gold chatons, blued screws (the wheel arbors carry their own 3D jewels)
+  const jewels = [[c - 220, c - 90], [c + 120, c - 210], [c + 300, c - 40]];
   for (const [x, y] of jewels) {
     ctx.fillStyle = '#d8b46a';
     ctx.beginPath();

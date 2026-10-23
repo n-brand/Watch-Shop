@@ -16,6 +16,15 @@ const FRAME_HALF_H = 42;
 // A digital watch shows the live time: its saved (frozen) display texture is swapped for a live one
 const liveDisplay = (parts) => (parts.display ? attachLiveDisplay(parts.display) : null);
 
+// Movement parts that move on their own: userData.spin (rad/s) turns, userData.swing ({ amp, hz }) oscillates
+function findMovers(root) {
+  const movers = [];
+  root.traverse((obj) => {
+    if (obj.userData.spin || obj.userData.swing) movers.push(obj);
+  });
+  return movers;
+}
+
 // wheelZoom: 'ctrl' = plain wheel scrolls the page, Ctrl/Cmd + wheel zooms; 'always' = plain wheel zooms
 // model: which procedural watch to build when there is no modelPath (see MODELS in config.js)
 export async function createViewer(container, { reducedMotion = false, modelPath, model, wheelZoom = 'ctrl' } = {}) {
@@ -35,6 +44,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   let watch = loaded.root;
   let parts = loaded.parts;
   let display = liveDisplay(parts);
+  let movers = findMovers(watch);
   rig.add(watch);
 
   const camera = new THREE.PerspectiveCamera(FOV, 1, 20, 2500);
@@ -56,10 +66,16 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   });
 
   // Ctrl/Cmd + wheel (and trackpad pinch) always zooms; plain wheel only with wheelZoom 'always'.
-  controls.enableZoom = wheelZoom === 'always';
+  // setWheelZoom switches the mode later (e.g. 'always' while a full-screen view is open).
+  let wheelMode = wheelZoom;
+  controls.enableZoom = wheelMode === 'always';
   container.addEventListener('wheel', (e) => {
-    controls.enableZoom = wheelZoom === 'always' || e.ctrlKey || e.metaKey;
+    controls.enableZoom = wheelMode === 'always' || e.ctrlKey || e.metaKey;
   }, { capture: true, passive: true });
+  const setWheelZoom = (mode) => {
+    wheelMode = mode;
+    controls.enableZoom = mode === 'always';
+  };
   container.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'touch') controls.enableZoom = true;
   }, { capture: true });
@@ -102,9 +118,19 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   // Let the page scroll vertically on touch; horizontal drags still rotate.
   renderer.domElement.style.touchAction = 'pan-y';
 
+  let lastFrame = performance.now();
   function render() {
+    const now = performance.now();
+    const dt = Math.min((now - lastFrame) / 1000, 0.1); // no jump after a paused tab
+    lastFrame = now;
     updateHands(parts, { smooth: !reducedMotion });
     display?.draw();
+    if (!reducedMotion) {
+      for (const obj of movers) {
+        if (obj.userData.spin) obj.rotation.z += obj.userData.spin * dt;
+        else obj.rotation.z = obj.userData.swing.amp * Math.sin(now / 1000 * Math.PI * 2 * obj.userData.swing.hz);
+      }
+    }
     if (parts.rotor && !reducedMotion) parts.rotor.rotation.z -= 0.004;
     controls.update();
     renderer.render(scene, camera);
@@ -137,6 +163,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
     watch = next.root;
     parts = next.parts;
     display = nextDisplay;
+    movers = findMovers(watch);
     rig.add(watch);
     render();
     return true;
@@ -174,7 +201,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   }
 
   return {
-    renderer, scene, camera, controls, rig, frame, setFrame, setRunning, setModel, snapshot,
+    renderer, scene, camera, controls, rig, frame, setFrame, setRunning, setModel, snapshot, setWheelZoom,
     get watch() { return watch; },
     get parts() { return parts; },
     get display() { return display; },

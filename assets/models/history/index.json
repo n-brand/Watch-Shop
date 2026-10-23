@@ -124,5 +124,14 @@
     "note": "Lumen – Kürzere Bandanstösse (Band beginnt 23,4 statt 25,9 mm von der Mitte, Lug-to-Lug ~46,8 statt 51,9 mm); das Band folgt demselben Handgelenk und ist dadurch entsprechend länger",
     "bytes": 3147716,
     "thumb": "v015.webp"
+  },
+  {
+    "id": "v016",
+    "model": "meridian",
+    "file": "v016.glb",
+    "date": "2026-10-23T11:45:18.353Z",
+    "note": "Meridian: Uhrwerk OR-01 in 3D hinter dem Saphirboden – Federhaus mit Sperrrad, Räderkette (Minuten-, Kleinboden-, Sekunden- und Ankerrad mit Trieben und Lagersteinen), Anker, Unruh mit gebläuter Spirale unter dem Kloben; Räder drehen im Übersetzungsverhältnis, Sekundenrad 1 U/min, Unruh schwingt mit 4 Hz",
+    "bytes": 3146280,
+    "thumb": "v016.webp"
   }
 ]

@@ -94,15 +94,25 @@ export function initConfigurator(form, media, { onAdd }) {
     }
   }
 
-  // Phones: the inline 3D view is display only (CSS turns off pointer events), turning happens in full screen.
+  // Full screen on every device. Phones: the inline 3D view is display only (CSS turns off pointer events), so
+  // turning happens here. Desktop: inline the wheel scrolls the page (Ctrl + wheel zooms), here it zooms.
   // main is a stacking context below the header; lightbox-open lifts it, as on the history page.
+  // Leaving full screen resizes the stage, which puts the camera back at its fitted distance.
   const narrow = window.matchMedia('(max-width: 860px)');
+  const isFullview = () => media.classList.contains('is-fullview');
+  function renderLabels() {
+    openButton.textContent = narrow.matches ? 'Vollbild · drehen' : 'Vollbild';
+    if (isFullview()) hint.textContent = narrow.matches ? 'Ziehen zum Drehen · zwei Finger zoomen' : 'Ziehen zum Drehen · Mausrad zoomt';
+    else hint.textContent = 'Ziehen zum Drehen';
+  }
   function setFullview(on) {
     media.classList.toggle('is-fullview', on);
     document.documentElement.classList.toggle('no-scroll', on);
     document.documentElement.classList.toggle('lightbox-open', on);
     closeButton.hidden = !on;
     viewer?.setFrame(on ? { x: 0, y: 0, zoom: 1 } : FRAME);
+    viewer?.setWheelZoom(on ? 'always' : 'ctrl');
+    renderLabels();
     if (on) {
       viewer?.setRunning(true);
       closeButton.focus();
@@ -113,11 +123,10 @@ export function initConfigurator(form, media, { onAdd }) {
   openButton.addEventListener('click', () => setFullview(true));
   closeButton.addEventListener('click', () => setFullview(false));
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && media.classList.contains('is-fullview')) setFullview(false);
+    if (e.key === 'Escape' && isFullview()) setFullview(false);
   });
-  narrow.addEventListener('change', (e) => {
-    if (!e.matches && media.classList.contains('is-fullview')) setFullview(false);
-  });
+  narrow.addEventListener('change', renderLabels);
+  renderLabels();
 
   // Load three.js and the watch only when the configurator comes close; skip it when the user asked to save data
   new IntersectionObserver((entries, observer) => {
