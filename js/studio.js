@@ -56,13 +56,15 @@ export function addStudioLights(scene) {
   const rim = new THREE.DirectionalLight(0xffeedd, 0.9);
   rim.position.set(0, 40, -90);
   // The rim light is the key light for the caseback side: its shadows give the movement its contact shadows
-  // (wheels under bridges, bridges on the plate, rotor over the movement)
+  // (wheels under bridges, bridges on the plate, rotor over the movement).
+  // Its shadow frustum only spans the movement's depth (distance along the light ~89-102 mm for the movement,
+  // ~48 mm for the bracelet loop behind the caseback), so the strap neither casts nor receives these shadows.
   rim.castShadow = true;
   rim.shadow.mapSize.set(2048, 2048);
   rim.shadow.camera.left = rim.shadow.camera.bottom = -14;
   rim.shadow.camera.right = rim.shadow.camera.top = 14;
-  rim.shadow.camera.near = 40;
-  rim.shadow.camera.far = 160;
+  rim.shadow.camera.near = 87;
+  rim.shadow.camera.far = 104;
   rim.shadow.bias = -0.0002;
   rim.shadow.normalBias = 0.01;
   scene.add(key, strip, rim, new THREE.AmbientLight(0xffffff, 0.06));
