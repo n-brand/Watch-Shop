@@ -141,14 +141,15 @@ export function createGlass() {
 // Dark, satin dial: not mirror-like, sunburst and grain come from the texture
 export function createDial(texture) {
   return new THREE.MeshPhysicalMaterial({
-    name: 'Dial',
+    name: MATERIAL_NAMES.dial,
     map: texture,
     metalness: 0.25,
     roughness: 0.4,
   });
 }
 
-export async function createDialTexture({ base = '#25211d', edge = '#0f0d0b', print = '#e3c99a' } = {}) {
+// Defaults are the standard night-blue dial, so every watch built in code (and every saved version) has it
+export async function createDialTexture({ base = '#203252', edge = '#0a1325', print = '#e3c99a' } = {}) {
   await Promise.all([
     document.fonts.load('400 100px "Cormorant Garamond"'),
     document.fonts.load('400 40px "Inter"'),

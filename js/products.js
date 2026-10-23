@@ -3,7 +3,7 @@
 
 // Watches in the configurator; case prices per model (straps are priced the same on both)
 export const WATCH_MODELS = [
-  { id: 'meridian', label: 'Meridian', detail: 'Automatik · 41 mm', prices: { rose: 24800, yellow: 25600, steel: 9400 } },
+  { id: 'meridian', label: 'Meridian', detail: 'Automatik · 41 mm', prices: { rose: 24800, yellow: 25600, steel: 9400 }, dials: true },
   { id: 'lumen', label: 'Lumen', detail: 'Digital · 37 × 40 mm', prices: { rose: 12600, yellow: 13200, steel: 4200 } },
 ];
 
@@ -19,8 +19,22 @@ export const STRAP_OPTIONS = [
   { id: 'leather-black', label: 'Leder Schwarz', variant: 'leather', color: 0x0e0d0d, swatch: '#1c1a19', price: -1800 },
 ];
 
+// Dial colours for models with a dial (Meridian): sunburst centre, darker edge, print colour (passed to
+// createDialTexture). The light dial gets a dark gold print so it stays legible.
+// Night blue is the standard dial (also the one the code builds, see createDialTexture); black was dropped.
+export const DIAL_OPTIONS = [
+  { id: 'blue', label: 'Nachtblau', base: '#203252', edge: '#0a1325', print: '#e3c99a' },
+  { id: 'green', label: 'Waldgrün', base: '#233c2e', edge: '#0b1810', print: '#e3c99a' },
+  { id: 'silver', label: 'Silber', base: '#e1ded7', edge: '#aaa59b', print: '#6f5322' },
+].map((d) => ({ ...d, swatch: `radial-gradient(circle at 40% 35%, ${d.base}, ${d.edge})` }));
+export const DEFAULT_DIAL = 'blue';
+
 export const priceOf = (model, caseOpt, strapOpt) => model.prices[caseOpt.id] + strapOpt.price;
-export const renderImage = (model, caseOpt, strapOpt) => `assets/img/renders/${model.id}-${caseOpt.id}-${strapOpt.id}.webp`;
+// Stills per model, case, strap and (for models with a dial) dial colour; the standard dial keeps the plain name
+export const renderImage = (model, caseOpt, strapOpt, dialOpt) => {
+  const dial = model.dials && dialOpt && dialOpt.id !== DEFAULT_DIAL ? `-${dialOpt.id}` : '';
+  return `assets/img/renders/${model.id}-${caseOpt.id}-${strapOpt.id}${dial}.webp`;
+};
 
 export const COLLECTION = [
   {

@@ -1,5 +1,5 @@
 import { CURRENCY } from './config.js';
-import { WATCH_MODELS, CASE_OPTIONS, STRAP_OPTIONS, priceOf, renderImage } from './products.js';
+import { WATCH_MODELS, CASE_OPTIONS, STRAP_OPTIONS, DIAL_OPTIONS, priceOf, renderImage } from './products.js';
 
 // Pose and framing of the 3D view; tools/render-stills.js renders the configurator stills with the same values,
 // so the still can be swapped for the live model without a jump
@@ -17,15 +17,20 @@ export function initConfigurator(form, media, { onAdd }) {
   const closeButton = media.querySelector('[data-configure-close]');
   const modelSelect = form.elements.model;
   modelSelect.replaceChildren(...WATCH_MODELS.map((m) => new Option(`${m.label} · ${m.detail}`, m.id)));
+  const dialFieldset = form.querySelector('[data-dial-fieldset]');
 
+  // dialOpt is null for models without a dial (Lumen)
   const current = () => {
     const data = new FormData(form);
+    const model = WATCH_MODELS.find((m) => m.id === data.get('model'));
     return {
-      model: WATCH_MODELS.find((m) => m.id === data.get('model')),
+      model,
       caseOpt: CASE_OPTIONS.find((o) => o.id === data.get('case')),
       strapOpt: STRAP_OPTIONS.find((o) => o.id === data.get('strap')),
+      dialOpt: model.dials ? DIAL_OPTIONS.find((o) => o.id === data.get('dial')) : null,
     };
   };
+  const describe = ({ caseOpt, strapOpt, dialOpt }) => [caseOpt.label, dialOpt && `Zifferblatt ${dialOpt.label}`, strapOpt.label].filter(Boolean);
 
   let viewer = null;
   let applyLook = null;
@@ -36,25 +41,29 @@ export function initConfigurator(form, media, { onAdd }) {
   function sync3D() {
     syncing = syncing.then(async () => {
       if (!viewer) return;
-      const { model, caseOpt, strapOpt } = current();
+      const { model, caseOpt, strapOpt, dialOpt } = current();
       if (model.id !== shownModel) {
         stage.setAttribute('aria-busy', 'true');
         await viewer.setModel({ model: model.id });
         shownModel = model.id;
         stage.removeAttribute('aria-busy');
       }
-      applyLook(viewer.watch, viewer.parts, caseOpt, strapOpt);
+      await applyLook(viewer.watch, viewer.parts, caseOpt, strapOpt, dialOpt);
     }).catch((err) => console.warn('Configurator 3D update failed', err));
   }
 
   function update() {
-    const { model, caseOpt, strapOpt } = current();
-    image.src = renderImage(model, caseOpt, strapOpt);
-    image.alt = `${model.label} in ${caseOpt.label} mit ${strapOpt.label}`;
-    stage.setAttribute('aria-label', `${model.label} in ${caseOpt.label} mit ${strapOpt.label}, 3D-Ansicht zum Drehen`);
+    const selection = current();
+    const { model, caseOpt, strapOpt, dialOpt } = selection;
+    const [first, ...rest] = describe(selection);
+    image.src = renderImage(model, caseOpt, strapOpt, dialOpt);
+    image.alt = `${model.label} in ${first} mit ${rest.join(' und ')}`;
+    stage.setAttribute('aria-label', `${image.alt}, 3D-Ansicht zum Drehen`);
 
+    dialFieldset.hidden = !model.dials;
     form.querySelector('[data-model-name]').textContent = model.label;
     form.querySelector('[data-selected="case"]').textContent = caseOpt.label;
+    form.querySelector('[data-selected="dial"]').textContent = dialOpt?.label ?? '';
     form.querySelector('[data-selected="strap"]').textContent = strapOpt.label;
     form.querySelector('[data-price]').textContent = CURRENCY.format(priceOf(model, caseOpt, strapOpt));
     sync3D();
@@ -65,7 +74,11 @@ export function initConfigurator(form, media, { onAdd }) {
   function warm(model) {
     if (warmed.has(model.id)) return;
     warmed.add(model.id);
-    for (const c of CASE_OPTIONS) for (const s of STRAP_OPTIONS) new Image().src = renderImage(model, c, s);
+    for (const c of CASE_OPTIONS) {
+      for (const s of STRAP_OPTIONS) {
+        for (const d of model.dials ? DIAL_OPTIONS : [null]) new Image().src = renderImage(model, c, s, d);
+      }
+    }
   }
 
   async function start3D() {
@@ -142,13 +155,14 @@ export function initConfigurator(form, media, { onAdd }) {
   });
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const { model, caseOpt, strapOpt } = current();
+    const selection = current();
+    const { model, caseOpt, strapOpt, dialOpt } = selection;
     onAdd({
-      key: `${model.id}-${caseOpt.id}-${strapOpt.id}`,
+      key: [model.id, caseOpt.id, strapOpt.id, dialOpt?.id].filter(Boolean).join('-'),
       name: model.label,
-      variant: `${caseOpt.label} · ${strapOpt.label}`,
+      variant: describe(selection).join(' · '),
       price: priceOf(model, caseOpt, strapOpt),
-      image: renderImage(model, caseOpt, strapOpt),
+      image: renderImage(model, caseOpt, strapOpt, dialOpt),
     });
   });
   update();

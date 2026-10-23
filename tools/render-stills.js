@@ -3,14 +3,16 @@
 // or in the console: await window.renderStills() (or renderStills({ models: ['lumen'] }) for one model)
 import { createViewer } from '../js/scene.js';
 import { updateHands } from '../js/clock.js';
-import { CASE_OPTIONS, STRAP_OPTIONS, WATCH_MODELS } from '../js/products.js';
+import { CASE_OPTIONS, STRAP_OPTIONS, DIAL_OPTIONS, DEFAULT_DIAL, WATCH_MODELS, renderImage } from '../js/products.js';
 import { applyLook } from '../js/watch/look.js';
 
 // Classic catalogue time: hands frame the logo; the digital display shows the same time
 const CATALOGUE_TIME = new Date(2026, 0, 1, 10, 9, 36);
 const PIXEL_RATIO = 2;
 
-const look = (caseId, strapId) => ({ case: caseId, strap: strapId });
+const look = (caseId, strapId, dialId = DEFAULT_DIAL) => ({ case: caseId, strap: strapId, dial: dialId });
+// File name of a configurator still, taken from the shop's own naming so both always agree
+const stillName = (m, c, s, d) => renderImage(m, c, s, d).split('/').pop().replace('.webp', '');
 // rx/ry: rig rotation, x: horizontal offset (fraction of width), zoom: camera zoom, w/h: CSS size (canvas is twice that).
 // The configurator views use the same pose as its 3D view starts with (see configurator.js), so the swap is seamless.
 const SHOTS = [
@@ -19,9 +21,9 @@ const SHOTS = [
   { model: 'meridian', name: 'glass', rx: -0.25, ry: 0.2, zoom: 1.9, w: 600, h: 750, ...look('yellow', 'bracelet') },
   { model: 'meridian', name: 'movement', rx: 0.05, ry: Math.PI, zoom: 1.45, w: 600, h: 750, hideStrap: true, ...look('yellow', 'bracelet') },
   { model: 'meridian', name: 'profile', rx: 0.05, ry: -1.35, x: -0.2, zoom: 0.8, w: 600, h: 600, ...look('yellow', 'bracelet') },
-  ...WATCH_MODELS.flatMap((m) => CASE_OPTIONS.flatMap((c) => STRAP_OPTIONS.map((s) => ({
-    model: m.id, name: `${m.id}-${c.id}-${s.id}`, rx: 0.05, ry: -0.35, x: -0.06, zoom: 0.85, w: 600, h: 750, ...look(c.id, s.id),
-  })))),
+  ...WATCH_MODELS.flatMap((m) => CASE_OPTIONS.flatMap((c) => STRAP_OPTIONS.flatMap((s) => (m.dials ? DIAL_OPTIONS : [null]).map((d) => ({
+    model: m.id, name: stillName(m, c, s, d), rx: 0.05, ry: -0.35, x: -0.06, zoom: 0.85, w: 600, h: 750, ...look(c.id, s.id, d?.id),
+  }))))),
 ];
 
 const stage = document.getElementById('stage');
@@ -41,7 +43,8 @@ async function renderShot(shot) {
 
   const caseOpt = CASE_OPTIONS.find((o) => o.id === shot.case);
   const strapOpt = STRAP_OPTIONS.find((o) => o.id === shot.strap);
-  applyLook(viewer.watch, parts, caseOpt, strapOpt);
+  const model = WATCH_MODELS.find((m) => m.id === shot.model);
+  await applyLook(viewer.watch, parts, caseOpt, strapOpt, model.dials ? DIAL_OPTIONS.find((o) => o.id === shot.dial) : null);
   if (parts.strap) parts.strap.visible = !shot.hideStrap;
 
   updateHands(parts, { smooth: false, date: CATALOGUE_TIME });

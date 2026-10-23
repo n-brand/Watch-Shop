@@ -18,7 +18,7 @@ Danach im Browser öffnen: [http://127.0.0.1:5173](http://127.0.0.1:5173)
 
 ## Seiten
 
-- `index.html` – Shop mit Produktbildern, Story, Details und Konfigurator; im Konfigurator Modell per Dropdown wählen (Meridian, Lumen) und die Uhr in 3D drehen (three.js lädt erst, wenn der Konfigurator in Sicht kommt)
+- `index.html` – Shop mit Produktbildern, Story, Details und Konfigurator; im Konfigurator Modell per Dropdown wählen (Meridian, Lumen), bei der Meridian die Zifferblattfarbe, und die Uhr in 3D drehen (three.js lädt erst, wenn der Konfigurator in Sicht kommt)
 - `tests.html` – interne Experimente, z. B. das Lumen-Display nur mit HTML/CSS
 - `history.html` – Modell-Verlauf aller gespeicherten Uhrenversionen (glb) mit drehbarer 3D-Detailansicht, Filter nach Modell (Meridian, Lumen), auf dem Handy als Vollbild mit Pfeilen
 - `logos.html` – Entwürfe des Orvane-Kristalls in 2D und 3D

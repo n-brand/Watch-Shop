@@ -1,4 +1,4 @@
-import { COLLECTION, CASE_OPTIONS, STRAP_OPTIONS } from './products.js';
+import { COLLECTION, CASE_OPTIONS, STRAP_OPTIONS, DIAL_OPTIONS, DEFAULT_DIAL } from './products.js';
 import { renderSwatches, renderCollection } from './ui.js';
 import { initConfigurator } from './configurator.js';
 import { createCart } from './cart.js';
@@ -6,6 +6,7 @@ import { createCart } from './cart.js';
 document.getElementById('year').textContent = new Date().getFullYear();
 
 renderSwatches(document.querySelector('[data-option="case"]'), 'case', CASE_OPTIONS, 'yellow');
+renderSwatches(document.querySelector('[data-option="dial"]'), 'dial', DIAL_OPTIONS, DEFAULT_DIAL);
 renderSwatches(document.querySelector('[data-option="strap"]'), 'strap', STRAP_OPTIONS, 'bracelet');
 renderCollection(document.getElementById('collection-grid'), COLLECTION);
 

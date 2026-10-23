@@ -28,6 +28,7 @@ export const DEFAULT_MODEL = 'meridian';
 export const MATERIAL_NAMES = {
   caseMetal: 'CaseMetal',
   leather: 'StrapLeather',
+  dial: 'Dial',
 };
 
 // Strap variants are children of the Strap node; the configurator shows one at a time.
