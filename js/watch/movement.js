@@ -654,10 +654,13 @@ function buildCasingRing(m) {
 function buildGearTrain(m) {
   const group = new THREE.Group();
   group.name = 'GearTrain';
-  // Each wheel meshes with the next arbor's pinion; the fourth wheel turns once a minute (seconds hand)
+  // Each wheel meshes with the next arbor's pinion. In a real watch the fourth wheel turns once a minute and the
+  // centre wheel about once an hour, which looks standing still; the train runs 10x faster, so the centre wheel
+  // turns in under 4 min and the third wheel in about 35 s, while the gearing between the wheels stays correct.
+  const TRAIN_SPEED = 10;
   const SECONDS = (Math.PI * 2) / 60;
   const P = { third: 0.55, fourth: 0.5, escape: 0.45 };
-  const wFourth = SECONDS;
+  const wFourth = SECONDS * TRAIN_SPEED;
   const wThird = -wFourth * (P.fourth / R.third);
   const wCenter = -wThird * (P.third / R.center);
   const wEscape = -wFourth * (R.fourth / P.escape);

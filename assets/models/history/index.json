@@ -205,5 +205,14 @@
     "note": "Meridian: Sperrrad und Kronrad über dem Federhaus drehen sich sichtbar (Aufzug durch den Rotor, eine Umdrehung in 40 s)",
     "bytes": 2457500,
     "thumb": "v024.webp"
+  },
+  {
+    "id": "v025",
+    "model": "meridian",
+    "file": "v025.glb",
+    "date": "2026-10-23T21:21:11.920Z",
+    "note": "Meridian: Räderwerk läuft 10x schneller, damit Minutenrad (unter 4 min pro Umdrehung) und Kleinbodenrad (35 s) sichtbar drehen; Übersetzung zwischen den Rädern bleibt stimmig",
+    "bytes": 2457496,
+    "thumb": "v025.webp"
   }
 ]
