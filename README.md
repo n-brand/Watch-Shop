@@ -17,6 +17,14 @@ node server.js
 
 Danach im Browser öffnen: [http://127.0.0.1:5173](http://127.0.0.1:5173)
 
+**Auf jedem Rechner einmal `npm install`** (nach dem ersten Klonen und immer, wenn sich `package.json` geändert hat). `node_modules` ist nicht im Repo. Fehlt es, speichert `server.js` neue Versionen unkomprimiert (mehrere MB statt ~0,4 MB) und meldet im Terminal „Storing uncompressed model: run npm install for compression“. So eine Version lässt sich nachträglich verkleinern:
+
+```bash
+node tools/compress-glb.js assets/models/history/vNNN.glb assets/models/history/vNNN.glb
+```
+
+Danach `bytes` des Eintrags in `assets/models/history/index.json` anpassen.
+
 ## Seiten
 
 - `index.html` – Shop mit Produktbildern, Story, Details und Konfigurator; im Konfigurator Modell per Dropdown wählen (Meridian, Lumen), bei der Meridian die Zifferblattfarbe, und die Uhr in 3D drehen (three.js lädt erst, wenn der Konfigurator in Sicht kommt)
