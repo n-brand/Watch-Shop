@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { loadWatch } from './watch/loadWatch.js';
 import { updateHands } from './clock.js';
+import { attachLiveDisplay } from './watch/digitalDisplay.js';
 import { createStudioEnvironment, addStudioLights, configureRenderer } from './studio.js';
 
 // Vertical field of view of an ~85 mm lens on full frame: long focal length, little perspective distortion
@@ -12,8 +13,12 @@ const FOV = 16;
 const FRAME_HALF_W = 32;
 const FRAME_HALF_H = 42;
 
+// A digital watch shows the live time: its saved (frozen) display texture is swapped for a live one
+const liveDisplay = (parts) => (parts.display ? attachLiveDisplay(parts.display) : null);
+
 // wheelZoom: 'ctrl' = plain wheel scrolls the page, Ctrl/Cmd + wheel zooms; 'always' = plain wheel zooms
-export async function createViewer(container, { reducedMotion = false, modelPath, wheelZoom = 'ctrl' } = {}) {
+// model: which procedural watch to build when there is no modelPath (see MODELS in config.js)
+export async function createViewer(container, { reducedMotion = false, modelPath, model, wheelZoom = 'ctrl' } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   configureRenderer(renderer);
@@ -26,9 +31,10 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   // rig: driven by scroll animations; camera orbit stays with the controls
   const rig = new THREE.Group();
   scene.add(rig);
-  const loaded = await loadWatch(modelPath === undefined ? undefined : { path: modelPath });
+  const loaded = await loadWatch({ ...(modelPath === undefined ? {} : { path: modelPath }), ...(model ? { model } : {}) });
   let watch = loaded.root;
   let parts = loaded.parts;
+  let display = liveDisplay(parts);
   rig.add(watch);
 
   const camera = new THREE.PerspectiveCamera(FOV, 1, 20, 2500);
@@ -98,6 +104,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
 
   function render() {
     updateHands(parts, { smooth: !reducedMotion });
+    display?.draw();
     if (parts.rotor && !reducedMotion) parts.rotor.rotation.z -= 0.004;
     controls.update();
     renderer.render(scene, camera);
@@ -113,11 +120,13 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   await renderer.compileAsync(scene, camera);
   render();
 
-  // Swap the displayed model; the camera orbit is kept so versions compare from the same angle.
+  // Swap the displayed model (a .glb path or { model } for a procedural watch);
+  // the camera orbit is kept so versions compare from the same angle.
   let modelRequest = 0;
-  async function setModel(path) {
+  async function setModel(source) {
     const request = ++modelRequest;
-    const next = await loadWatch({ path });
+    const next = await loadWatch(typeof source === 'string' ? { path: source } : source);
+    const nextDisplay = liveDisplay(next.parts); // before compiling, so the live material is the one compiled
     if (request === modelRequest) await renderer.compileAsync(next.root, camera, scene);
     if (request !== modelRequest) {
       disposeTree(next.root);
@@ -127,6 +136,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
     disposeTree(watch);
     watch = next.root;
     parts = next.parts;
+    display = nextDisplay;
     rig.add(watch);
     render();
     return true;

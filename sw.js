@@ -6,7 +6,7 @@
 // CDN libraries and fonts: cache first (their URLs are version-pinned and never change).
 // Bump VERSION when the precache list changes.
 // All paths are relative to this file, so the app also works in a sub-folder (e.g. GitHub Pages /Watch-Shop/).
-const VERSION = 'orvane-v5';
+const VERSION = 'orvane-v6';
 const HISTORY_URL = './assets/models/history/';
 
 const CDN_THREE = 'https://cdn.jsdelivr.net/npm/three@0.169.0';
@@ -20,6 +20,7 @@ const PRECACHE = [
   './js/main.js', './js/brand.js', './js/cart.js', './js/clock.js', './js/config.js', './js/configurator.js',
   './js/products.js', './js/scene.js', './js/studio.js', './js/ui.js',
   './js/watch/loadWatch.js', './js/watch/materials.js', './js/watch/proceduralWatch.js',
+  './js/watch/digitalWatch.js', './js/watch/digitalDisplay.js',
   './js/logo/crystals.js', './js/logo/crystalMesh.js', './js/logo/logos-page.js',
   './js/history/history.js', './js/history/saveVersion.js',
   ...['hero', 'case', 'glass', 'movement', 'profile'].map((name) => `./assets/img/renders/${name}.webp`),

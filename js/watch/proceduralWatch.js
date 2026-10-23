@@ -25,7 +25,7 @@ const rand = (() => {
   return () => ((s = (s * 16807) % 2147483647) / 2147483647);
 })();
 
-function shadowed(mesh) {
+export function shadowed(mesh) {
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   return mesh;
@@ -42,7 +42,7 @@ function lathe(points, segments = 192) {
 // Extrudes a side profile: shape x -> world Y (length), shape y -> world Z (height), extrusion -> world X (width).
 // Rounded bevels give soft, realistic edge highlights; creased normals keep flat faces crisp.
 const PROFILE_TO_WORLD = new THREE.Matrix4().set(0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1);
-function profileSolid(shape, width, { bevel = 0.3, segments = 3, curveSegments = 14 } = {}) {
+export function profileSolid(shape, width, { bevel = 0.3, segments = 3, curveSegments = 14 } = {}) {
   const depth = Math.max(width - 2 * bevel, 0.01);
   let geo = new THREE.ExtrudeGeometry(shape, {
     depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelOffset: -bevel, bevelSegments: segments, curveSegments,
@@ -429,7 +429,8 @@ function buildClasp(length, width, polished, brushed) {
   return group;
 }
 
-function buildBracelet(polished, brushed) {
+// endLinks: false for cases with integrated lugs that pick up the first link directly
+function buildBracelet(polished, brushed, { endLinks = true } = {}) {
   const group = new THREE.Group();
   group.name = 'Bracelet';
   const { pointAt, tangentAngle, total, tAt } = wristCurve();
@@ -495,11 +496,13 @@ function buildBracelet(polished, brushed) {
     group.add(mesh);
   }
 
-  const endGeo = endLinkGeometry();
-  for (const sy of [-1, 1]) {
-    const end = shadowed(new THREE.Mesh(endGeo, polished));
-    end.scale.y = sy;
-    group.add(end);
+  if (endLinks) {
+    const endGeo = endLinkGeometry();
+    for (const sy of [-1, 1]) {
+      const end = shadowed(new THREE.Mesh(endGeo, polished));
+      end.scale.y = sy;
+      group.add(end);
+    }
   }
 
   const tMid = tAt(total / 2);
@@ -575,10 +578,11 @@ function buildLeather(polished) {
   return group;
 }
 
-function buildStrap(polished, brushed) {
+// Shared with other models: bracelet and leather follow the same wrist, starting 25.9 mm from the case centre
+export function buildStrap(polished, brushed, { endLinks = true } = {}) {
   const strap = new THREE.Group();
   strap.name = WATCH_PARTS.strap;
-  strap.add(buildBracelet(polished, brushed), buildLeather(polished));
+  strap.add(buildBracelet(polished, brushed, { endLinks }), buildLeather(polished));
   return strap;
 }
 

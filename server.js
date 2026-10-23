@@ -115,7 +115,7 @@ function saveRender(req, res, name) {
   });
 }
 
-// POST /api/versions: body is a .glb, X-Version-Note the URI-encoded description
+// POST /api/versions: body is a .glb, X-Version-Note the URI-encoded description, X-Version-Model the model id
 function saveVersion(req, res) {
   if (!isTrustedWrite(req)) {
     res.writeHead(403).end('Forbidden');
@@ -137,7 +137,9 @@ function saveVersion(req, res) {
     } catch {
       // keep empty note on malformed encoding
     }
-    const entry = { id, file: `${id}.glb`, date: new Date().toISOString(), note, bytes: data.length };
+    // Which watch this is (meridian, lumen, ...); entries without it are Meridian versions
+    const model = /^[a-z0-9-]{1,30}$/.test(req.headers['x-version-model'] || '') ? req.headers['x-version-model'] : 'meridian';
+    const entry = { id, model, file: `${id}.glb`, date: new Date().toISOString(), note, bytes: data.length };
     if (fs.existsSync(path.join(HISTORY_DIR, entry.file))) {
       res.writeHead(409).end(`${entry.file} already exists; index.json out of sync`);
       return;

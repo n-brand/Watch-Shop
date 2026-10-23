@@ -70,5 +70,14 @@
     "note": "Armband für ein 18,5-cm-Handgelenk ausgelegt (Innenumfang ~190 mm statt ~172 mm); Bandanstoss-Abstand 51,9 mm = ~88 % der Handgelenkbreite",
     "bytes": 759356,
     "thumb": "v009.webp"
+  },
+  {
+    "id": "v010",
+    "model": "lumen",
+    "file": "v010.glb",
+    "date": "2026-10-23T11:08:22.138Z",
+    "note": "Neues Modell Lumen (digital): Kissengehäuse 37 × 40 mm mit integrierten, verjüngten Bandanstössen, gebürstete Lunette mit polierter Fase, flaches Saphirglas, Display mit 7-Segment-Anzeige (Zeit, Sekunden, Wochentag, Datum) und Orvane-Kristall, vier Drücker, gravierter Gehäuseboden; das Display zeigt live die echte Uhrzeit",
+    "bytes": 2804588,
+    "thumb": "v010.webp"
   }
 ]

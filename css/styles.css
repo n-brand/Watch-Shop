@@ -362,6 +362,22 @@ main { overflow-x: clip; }
 .history-grid-view { max-width: 80rem; margin: 0 auto; padding: 4rem var(--gutter) 6rem; }
 .history-grid-view h1 { font-size: clamp(2.6rem, 6vw, 4rem); margin-bottom: 0.25rem; }
 .history-intro, .history-empty { color: var(--text-muted); font-size: 0.9rem; margin: 0 0 2.5rem; }
+.model-filter { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: -1rem 0 2rem; }
+.filter-chip {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.filter-chip span { margin-left: 0.3rem; letter-spacing: 0; color: var(--gold); }
+.filter-chip:hover { color: var(--text); border-color: var(--text-muted); }
+.filter-chip[aria-pressed="true"] { color: var(--gold-soft); border-color: var(--gold); }
 .version-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1.25rem; }
 .version-card { display: flex; flex-direction: column; height: 100%; border: 1px solid var(--line); background: var(--bg-raised); text-decoration: none; transition: border-color 0.25s, transform 0.4s var(--ease); }
 .version-card:hover, .version-card:focus-visible { border-color: var(--gold); transform: translateY(-3px); }
@@ -369,7 +385,9 @@ main { overflow-x: clip; }
 .version-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .version-thumb img.is-placeholder { object-fit: none; opacity: 0.4; filter: invert(78%) sepia(28%) saturate(520%) hue-rotate(358deg); }
 .version-body { display: grid; gap: 0.2rem; padding: 1rem 1.1rem 1.25rem; }
+.version-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
 .version-id { font-family: var(--font-display); font-size: 1.6rem; color: var(--gold-soft); line-height: 1; }
+.version-model { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); }
 .version-date { font-size: 0.72rem; color: var(--text-muted); }
 .version-note { font-size: 0.85rem; margin-top: 0.4rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 

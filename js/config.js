@@ -14,7 +14,15 @@ export const WATCH_PARTS = {
   secondHand: 'SecondHand',
   rotor: 'Rotor',
   logo: 'Logo',
+  display: 'Display',
 };
+
+// Watch models built in code. A digital model has a Display instead of hands.
+export const MODELS = {
+  meridian: { label: 'Meridian', kind: 'analog' },
+  lumen: { label: 'Lumen', kind: 'digital' },
+};
+export const DEFAULT_MODEL = 'meridian';
 
 // Material names the configurator recolours. A glTF model should use the same names.
 export const MATERIAL_NAMES = {
@@ -28,7 +36,11 @@ export const STRAP_VARIANTS = {
   leather: 'Leather',
 };
 
-// Parts a glTF model may omit without a warning
+// Parts a glTF model may omit without a warning; hands or display depending on the kind of watch
 export const OPTIONAL_PARTS = new Set(['rotor', 'bezel', 'crown', 'logo']);
+export const KIND_PARTS = {
+  analog: ['hourHand', 'minuteHand', 'secondHand'],
+  digital: ['display'],
+};
 
 export const CURRENCY = new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF', maximumFractionDigits: 0 });

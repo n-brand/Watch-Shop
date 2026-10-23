@@ -1,4 +1,4 @@
-import { MODEL_PATH, WATCH_PARTS, OPTIONAL_PARTS } from '../config.js';
+import { MODEL_PATH, WATCH_PARTS, OPTIONAL_PARTS, KIND_PARTS, DEFAULT_MODEL } from '../config.js';
 import { buildProceduralWatch } from './proceduralWatch.js';
 
 async function loadGltf(path) {
@@ -16,15 +16,26 @@ async function loadGltf(path) {
   return gltf.scene;
 }
 
+async function buildModel(model) {
+  if (model === 'lumen') {
+    const { buildDigitalWatch } = await import('./digitalWatch.js');
+    return buildDigitalWatch();
+  }
+  return buildProceduralWatch();
+}
+
 // Returns the watch root plus named parts. A glTF model needs nodes named as in WATCH_PARTS;
 // hands must pivot at the dial centre and rotate around local Z with 12 o'clock at +Y.
-export async function loadWatch({ path = MODEL_PATH } = {}) {
-  const root = path ? await loadGltf(path) : await buildProceduralWatch();
+// A digital model has a Display mesh instead of hands (see digitalDisplay.js).
+export async function loadWatch({ path = MODEL_PATH, model = DEFAULT_MODEL } = {}) {
+  const root = path ? await loadGltf(path) : await buildModel(model);
 
+  const kind = root.getObjectByName(WATCH_PARTS.display) ? 'digital' : 'analog';
+  const notNeeded = new Set(Object.entries(KIND_PARTS).filter(([k]) => k !== kind).flatMap(([, keys]) => keys));
   const parts = {};
   for (const [key, name] of Object.entries(WATCH_PARTS)) {
     parts[key] = root.getObjectByName(name) ?? null;
-    if (!parts[key] && !OPTIONAL_PARTS.has(key)) console.warn(`Watch part "${name}" not found in model`);
+    if (!parts[key] && !OPTIONAL_PARTS.has(key) && !notNeeded.has(key)) console.warn(`Watch part "${name}" not found in model`);
   }
   return { root, parts };
 }

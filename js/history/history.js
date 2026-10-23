@@ -1,9 +1,13 @@
 import { createViewer } from '../scene.js';
+import { MODELS, DEFAULT_MODEL } from '../config.js';
 
 const HISTORY_URL = 'assets/models/history/';
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const dateFormat = new Intl.DateTimeFormat('de-CH', { dateStyle: 'medium', timeStyle: 'short' });
 const sizeFormat = (bytes) => `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+// Entries saved before there was more than one model have no model field: they are Meridian versions
+const modelOf = (v) => v.model ?? DEFAULT_MODEL;
+const modelLabel = (id) => MODELS[id]?.label ?? id;
 
 const $ = (id) => document.getElementById(id);
 const gridView = $('grid-view');
@@ -21,15 +25,48 @@ async function loadIndex() {
 const versions = await loadIndex();
 window.orvaneVersions = versions;
 
+// Model filter: 'all' or a model id; the detail view steps through the filtered list
+let filter = 'all';
+const shown = () => (filter === 'all' ? versions : versions.filter((v) => modelOf(v) === filter));
+
+function renderFilter() {
+  const models = [...new Set(versions.map(modelOf))];
+  const bar = $('model-filter');
+  bar.hidden = models.length < 2;
+  if (bar.hidden) return;
+  const count = (id) => (id === 'all' ? versions.length : versions.filter((v) => modelOf(v) === id).length);
+  bar.replaceChildren(...['all', ...models].map((id) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'filter-chip';
+    button.dataset.model = id;
+    button.setAttribute('aria-pressed', String(id === filter));
+    button.textContent = `${id === 'all' ? 'Alle' : modelLabel(id)} `;
+    const n = document.createElement('span');
+    n.textContent = count(id);
+    button.append(n);
+    return button;
+  }));
+}
+
+$('model-filter').addEventListener('click', (e) => {
+  const button = e.target.closest('[data-model]');
+  if (!button) return;
+  filter = button.dataset.model;
+  renderFilter();
+  renderGrid();
+});
+
 function renderGrid() {
-  $('history-empty').hidden = versions.length > 0;
-  $('version-grid').replaceChildren(...[...versions].reverse().map((v) => {
+  const list = shown();
+  $('history-empty').hidden = list.length > 0;
+  $('version-grid').replaceChildren(...[...list].reverse().map((v) => {
     const li = document.createElement('li');
     li.innerHTML = `
       <a class="version-card" href="#${v.id}">
         <span class="version-thumb"><img alt="" width="640" height="800" loading="lazy" decoding="async"></span>
         <span class="version-body">
-          <span class="version-id"></span>
+          <span class="version-head"><span class="version-id"></span><span class="version-model"></span></span>
           <span class="version-date"></span>
           <span class="version-note"></span>
         </span>
@@ -38,25 +75,34 @@ function renderGrid() {
     img.src = v.thumb ? `${HISTORY_URL}${v.thumb}` : 'assets/img/logo.svg';
     if (!v.thumb) img.classList.add('is-placeholder');
     li.querySelector('.version-id').textContent = v.id;
+    li.querySelector('.version-model').textContent = modelLabel(modelOf(v));
     li.querySelector('.version-date').textContent = `${dateFormat.format(new Date(v.date))} · ${sizeFormat(v.bytes)}`;
     li.querySelector('.version-note').textContent = v.note || '(ohne Beschreibung)';
-    li.querySelector('a').setAttribute('aria-label', `${v.id}: ${v.note}`);
+    li.querySelector('a').setAttribute('aria-label', `${v.id}, ${modelLabel(modelOf(v))}: ${v.note}`);
     return li;
   }));
 }
 
 let viewer = null;
-let currentIndex = -1;
+let current = null;
 
-async function showDetail(index) {
-  const v = versions[index];
-  currentIndex = index;
+async function showDetail(v) {
+  // A direct link to a version outside the current filter shows it among all versions
+  if (!shown().includes(v)) {
+    filter = 'all';
+    renderFilter();
+    renderGrid();
+  }
+  const list = shown();
+  const index = list.indexOf(v);
+  current = v;
   gridView.hidden = true;
   detailView.hidden = false;
 
-  const prev = versions[index - 1];
-  const next = versions[index + 1];
-  $('detail-position').textContent = `Version ${index + 1} von ${versions.length}`;
+  const prev = list[index - 1];
+  const next = list[index + 1];
+  const label = modelLabel(modelOf(v));
+  $('detail-position').textContent = `${label} · Version ${index + 1} von ${list.length}`;
   $('detail-id').textContent = v.id;
   $('detail-date').textContent = dateFormat.format(new Date(v.date));
   $('detail-note').textContent = v.note || '(ohne Beschreibung)';
@@ -69,7 +115,7 @@ async function showDetail(index) {
   $('detail-next-label').textContent = next ? `${next.id} ` : '';
   $('lightbox-prev').disabled = !prev;
   $('lightbox-next').disabled = !next;
-  $('lightbox-title').textContent = `${v.id} · ${index + 1} / ${versions.length}`;
+  $('lightbox-title').textContent = `${v.id} · ${label} · ${index + 1} / ${list.length}`;
   document.title = `Orvane – Verlauf ${v.id}`;
 
   const path = `${HISTORY_URL}${v.file}`;
@@ -82,7 +128,7 @@ async function showDetail(index) {
   } else {
     await viewer.setModel(path);
   }
-  if (currentIndex === index) $('detail-loading').hidden = true;
+  if (current === v) $('detail-loading').hidden = true;
   // Warm the cache for the neighbours, so stepping with the arrows doesn't wait for the network
   for (const n of [next, prev]) if (n) prefetch(`${HISTORY_URL}${n.file}`);
 }
@@ -105,7 +151,7 @@ const inLightbox = () => detailView.classList.contains('is-lightbox');
 
 function showGrid() {
   setLightbox(false);
-  currentIndex = -1;
+  current = null;
   detailView.hidden = true;
   gridView.hidden = false;
   viewer?.setRunning(false);
@@ -113,29 +159,32 @@ function showGrid() {
 }
 
 function route() {
-  const index = versions.findIndex((v) => `#${v.id}` === location.hash);
-  if (index === -1) {
-    const from = currentIndex;
+  const v = versions.find((x) => `#${x.id}` === location.hash);
+  if (!v) {
+    const from = current;
     showGrid();
-    if (from !== -1) document.querySelector(`.version-card[href="#${versions[from].id}"]`)?.focus();
+    if (from) document.querySelector(`.version-card[href="#${from.id}"]`)?.focus();
   } else {
     // Detail view always starts at the top, not at the grid's scroll position
     window.scrollTo({ top: 0, behavior: 'instant' });
     // Coming from the grid on a phone: open straight into the lightbox
-    if (currentIndex === -1 && narrow.matches) setLightbox(true);
+    if (!current && narrow.matches) setLightbox(true);
     viewer?.setRunning(true);
-    showDetail(index);
+    showDetail(v);
   }
 }
 
-const go = (index) => {
-  if (versions[index]) location.hash = versions[index].id;
+// Step within the filtered list
+const go = (step) => {
+  const list = shown();
+  const target = list[list.indexOf(current) + step];
+  if (target) location.hash = target.id;
 };
 
-$('detail-prev').addEventListener('click', () => go(currentIndex - 1));
-$('detail-next').addEventListener('click', () => go(currentIndex + 1));
-$('lightbox-prev').addEventListener('click', () => go(currentIndex - 1));
-$('lightbox-next').addEventListener('click', () => go(currentIndex + 1));
+$('detail-prev').addEventListener('click', () => go(-1));
+$('detail-next').addEventListener('click', () => go(1));
+$('lightbox-prev').addEventListener('click', () => go(-1));
+$('lightbox-next').addEventListener('click', () => go(1));
 $('lightbox-open').addEventListener('click', () => setLightbox(true));
 $('lightbox-close').addEventListener('click', () => setLightbox(false));
 narrow.addEventListener('change', (e) => {
@@ -143,14 +192,15 @@ narrow.addEventListener('change', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (detailView.hidden || e.altKey || e.ctrlKey || e.metaKey) return;
-  if (e.key === 'ArrowLeft') go(currentIndex - 1);
-  else if (e.key === 'ArrowRight') go(currentIndex + 1);
+  if (e.key === 'ArrowLeft') go(-1);
+  else if (e.key === 'ArrowRight') go(1);
   else if (e.key === 'Escape' && inLightbox()) setLightbox(false);
   else if (e.key === 'Escape') location.hash = '';
   else return;
   e.preventDefault();
 });
 
+renderFilter();
 renderGrid();
 window.addEventListener('hashchange', route);
 route();
