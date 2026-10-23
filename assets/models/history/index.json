@@ -88,5 +88,41 @@
     "note": "Lumen: längliche, flache Drücker mit polierter Fase auf dunkler Dichtungsfuge statt runder Knöpfe; Zeitzeile im Display wird ausgemessen und passt mit den Sekunden immer ins Anzeigefenster",
     "bytes": 2952740,
     "thumb": "v011.webp"
+  },
+  {
+    "id": "v012",
+    "model": "lumen",
+    "file": "v012.glb",
+    "date": "2026-10-23T11:21:51.011Z",
+    "note": "Lumen – Faltverschluss neu: ohne Stein, gebürsteter, gewölbter Deckel mit poliertem Mittelsteg und graviertem ORVANE, polierte Hebelasche hinter feiner Fuge, Trennfuge zur Klinge, grössere Scharniere ohne Lücke zum Band",
+    "bytes": 3140316,
+    "thumb": "v012.webp"
+  },
+  {
+    "id": "v013",
+    "model": "meridian",
+    "file": "v013.glb",
+    "date": "2026-10-23T11:21:53.274Z",
+    "note": "Meridian – Faltverschluss neu: ohne Stein, gebürsteter, gewölbter Deckel mit poliertem Mittelsteg und graviertem ORVANE, polierte Hebelasche hinter feiner Fuge, Trennfuge zur Klinge, grössere Scharniere ohne Lücke zum Band",
+    "bytes": 1933000,
+    "thumb": "v013.webp"
+  },
+  {
+    "id": "v014",
+    "model": "meridian",
+    "file": "v014.glb",
+    "date": "2026-10-23T11:27:16.665Z",
+    "note": "Meridian – Kürzere Bandanstösse (Band beginnt 23,4 statt 25,9 mm von der Mitte, Lug-to-Lug ~46,8 statt 51,9 mm); das Band folgt demselben Handgelenk und ist dadurch entsprechend länger",
+    "bytes": 1933036,
+    "thumb": "v014.webp"
+  },
+  {
+    "id": "v015",
+    "model": "lumen",
+    "file": "v015.glb",
+    "date": "2026-10-23T11:27:19.757Z",
+    "note": "Lumen – Kürzere Bandanstösse (Band beginnt 23,4 statt 25,9 mm von der Mitte, Lug-to-Lug ~46,8 statt 51,9 mm); das Band folgt demselben Handgelenk und ist dadurch entsprechend länger",
+    "bytes": 3147716,
+    "thumb": "v015.webp"
   }
 ]

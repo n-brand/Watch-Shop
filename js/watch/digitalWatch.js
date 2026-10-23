@@ -2,12 +2,12 @@ import * as THREE from 'three';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { WATCH_PARTS, MATERIAL_NAMES } from '../config.js';
 import { METALS, createMetal, createGlass, assignWorldUVs } from './materials.js';
-import { shadowed, profileSolid, buildStrap } from './proceduralWatch.js';
+import { shadowed, profileSolid, buildStrap, STRAP_START } from './proceduralWatch.js';
 import { createDisplayPanel, createDisplayMaterial } from './digitalDisplay.js';
 
 // Orvane Lumen: digital model with a cushion case, integrated lugs and a 7-segment display.
 // Same conventions as the Meridian: millimetres, display faces +Z, 12 o'clock points to +Y,
-// strap shared with the Meridian (it starts 25.9 mm from the centre, where the integrated lugs end).
+// strap shared with the Meridian (it starts STRAP_START from the centre, where the integrated lugs end).
 
 const CASE_HW = 18.5; // half width (37 mm across, without pushers)
 const CASE_HH = 20.0; // half height (40 mm)
@@ -89,16 +89,19 @@ function slab(shape, z0, z1, bevel, { segments = 5, curveSegments = 24, taper = 
   return assignWorldUVs(geo);
 }
 
-// Integrated lug: side profile from inside the case to where the first bracelet link starts (y 25.9, z -1.4)
+// Integrated lug: side profile from inside the case to where the strap starts (STRAP_START, z -1.4).
+// Drawn for the original 26.4 mm reach and compressed along Y, so the lug only just clears the case.
+const lugY = (v) => 14.0 + (v - 14.0) * ((STRAP_START + 0.3 - 14.0) / (26.4 - 14.0));
 function lugShape() {
+  const y = lugY;
   const s = new THREE.Shape();
-  s.moveTo(14.0, CASE_TOP - 0.1);
-  s.lineTo(19.0, CASE_TOP - 0.15);
-  s.quadraticCurveTo(24.4, 1.5, 25.9, 0.0);
-  s.quadraticCurveTo(26.4, -0.6, 26.2, -1.6);
-  s.lineTo(25.7, -2.6);
-  s.quadraticCurveTo(22.0, -3.3, 18.0, -3.9);
-  s.lineTo(14.0, CASE_BOTTOM + 0.2);
+  s.moveTo(y(14.0), CASE_TOP - 0.1);
+  s.lineTo(y(19.0), CASE_TOP - 0.15);
+  s.quadraticCurveTo(y(24.4), 1.5, y(25.9), 0.0);
+  s.quadraticCurveTo(y(26.4), -0.6, y(26.2), -1.6);
+  s.lineTo(y(25.7), -2.6);
+  s.quadraticCurveTo(y(22.0), -3.3, y(18.0), -3.9);
+  s.lineTo(y(14.0), CASE_BOTTOM + 0.2);
   s.closePath();
   return s;
 }
@@ -114,7 +117,7 @@ function buildCase(polished, brushed) {
   let lugGeo = profileSolid(lugShape(), 19.4, { bevel: 0.5 });
   const pos = lugGeo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
-    const k = THREE.MathUtils.smoothstep(pos.getY(i), 16.5, 24.5);
+    const k = THREE.MathUtils.smoothstep(pos.getY(i), lugY(16.5), lugY(24.5));
     pos.setX(i, pos.getX(i) * THREE.MathUtils.lerp(1.28, 1, k));
   }
   lugGeo = assignWorldUVs(toCreasedNormals(lugGeo, THREE.MathUtils.degToRad(35)));

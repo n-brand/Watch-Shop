@@ -18,6 +18,9 @@ const DIAL_R = 17.6;
 const DIAL_Z = 1.8;
 const CASE_R = 20.92;
 const LUG_INNER_X = 10.0; // half of the 20 mm bracelet width
+// Where the strap starts (distance from the case centre along 12/6 o'clock). The lugs end here, the strap follows
+// the wrist from here; shorter lugs therefore mean a longer strap on the same wrist. Was 25.9 (long lugs).
+export const STRAP_START = 23.4;
 const CREASE = THREE.MathUtils.degToRad(35);
 
 const rand = (() => {
@@ -71,15 +74,17 @@ function facetGeometry(facets, center) {
 
 // ---------------------------------------------------------------- case
 
+// Side profile of a lug, drawn for the original 25.95 mm reach and compressed along Y to end at the strap start
 function lugShape() {
+  const y = (v) => 15.0 + (v - 15.0) * ((STRAP_START + 0.05 - 15.0) / (25.95 - 15.0));
   const s = new THREE.Shape();
-  s.moveTo(15.0, 2.2);
-  s.lineTo(19.0, 2.0);
-  s.quadraticCurveTo(23.6, 1.6, 25.2, 0.2);
-  s.quadraticCurveTo(25.95, -0.6, 25.5, -1.6);
-  s.lineTo(24.6, -2.5);
-  s.quadraticCurveTo(21.0, -3.1, 17.0, -3.9);
-  s.lineTo(15.0, -4.2);
+  s.moveTo(y(15.0), 2.2);
+  s.lineTo(y(19.0), 2.0);
+  s.quadraticCurveTo(y(23.6), 1.6, y(25.2), 0.2);
+  s.quadraticCurveTo(y(25.95), -0.6, y(25.5), -1.6);
+  s.lineTo(y(24.6), -2.5);
+  s.quadraticCurveTo(y(21.0), -3.1, y(17.0), -3.9);
+  s.lineTo(y(15.0), -4.2);
   s.closePath();
   return s;
 }
@@ -316,13 +321,13 @@ function buildCaseback(movementTexture) {
 
 // Straps loop around an elliptical "wrist" in the YZ plane, from the top lugs over the back to the bottom lugs.
 // The underside is flattened (soft max against a plane), like a real wrist, so the straight clasp sits flush.
-// Sized for an 18.5 cm wrist plus ~5 mm play: link centreline ~197 mm, inner circumference ~190 mm
-// (was ~172 mm, which made the head look bulky). Lug-to-lug 51.9 mm is ~88 % of the ~59 mm wrist width,
-// inside the 75–95 % range recommended for a good fit.
+// Sized for an 18.5 cm wrist plus ~5 mm play (was ~172 mm inner circumference, which made the head look bulky).
+// The strap starts at STRAP_START: with the short lugs (lug-to-lug ~46.8 mm instead of 51.9 mm) it covers more
+// of the same wrist and is correspondingly longer, so the proportions on the wrist stay the same.
 function wristCurve() {
   const ay = 34.1;
   const az = 28.6;
-  const t0 = Math.asin(25.9 / ay);
+  const t0 = Math.asin(STRAP_START / ay);
   const zc = az * Math.cos(t0) + 1.4;
   const flatZ = -zc - az + 2.2;
   const softMax = (a, b, k = 1.2) => (a + b + Math.sqrt((a - b) ** 2 + k * k)) / 2;
@@ -361,69 +366,150 @@ function linkShape(length, thickness, crown) {
   return s;
 }
 
-// End link: follows the case curve on the inside, flush between the lugs
+// End link: follows the case curve on the inside, flush between the lugs.
+// Drawn for the original 25.7 mm reach and compressed along Y to end just before the strap start.
 function endLinkGeometry() {
+  const y = (v) => 17.8 + (v - 17.8) * ((STRAP_START - 0.2 - 17.8) / (25.7 - 17.8));
   const s = new THREE.Shape();
-  s.moveTo(17.8, 0.9);
-  s.lineTo(22.6, 0.35);
-  s.quadraticCurveTo(25.1, 0.0, 25.7, -0.8);
-  s.lineTo(25.7, -2.0);
-  s.quadraticCurveTo(25.5, -2.75, 24.6, -2.85);
-  s.lineTo(17.8, -3.25);
+  s.moveTo(y(17.8), 0.9);
+  s.lineTo(y(22.6), 0.35);
+  s.quadraticCurveTo(y(25.1), 0.0, y(25.7), -0.8);
+  s.lineTo(y(25.7), -2.0);
+  s.quadraticCurveTo(y(25.5), -2.75, y(24.6), -2.85);
+  s.lineTo(y(17.8), -3.25);
   s.closePath();
   const geo = profileSolid(s, 2 * LUG_INNER_X - 0.3, { bevel: 0.32 });
   const pos = geo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
-    const y = pos.getY(i);
-    const w = THREE.MathUtils.clamp((22.6 - y) / (22.6 - 17.8), 0, 1);
+    const yi = pos.getY(i);
+    const w = THREE.MathUtils.clamp((y(22.6) - yi) / (y(22.6) - 17.8), 0, 1);
     const target = Math.sqrt(CASE_R ** 2 - pos.getX(i) ** 2) - 0.15;
-    pos.setY(i, y + w * (target - 17.8));
+    pos.setY(i, yi + w * (target - 17.8));
   }
   geo.computeVertexNormals();
   return toCreasedNormals(geo, CREASE);
 }
 
-// Folding clasp as seen from outside: brushed body as thick as the links, a polished cover with the
-// crystal emblem, a lift tab with its parting line at one end and hinge knuckles towards the links.
+// Bar running along Y (length) with a cross-section in XZ: flat underside, top crowned across the width
+// by `crown`, rounded edges. Crowned tops pick up a soft gradient instead of mirroring one flat patch of studio.
+function crownedBar(width, length, z0, z1, crown, bevel) {
+  const s = new THREE.Shape();
+  s.moveTo(-width / 2, z0);
+  s.lineTo(width / 2, z0);
+  s.lineTo(width / 2, z1);
+  s.quadraticCurveTo(0, z1 + 2 * crown, -width / 2, z1);
+  s.closePath();
+  let geo = new THREE.ExtrudeGeometry(s, {
+    depth: Math.max(length - 2 * bevel, 0.01), bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelOffset: -bevel,
+    bevelSegments: 3, curveSegments: 16,
+  });
+  geo.translate(0, 0, bevel - length / 2);
+  geo.rotateX(Math.PI / 2); // extrusion -> Y, shape y -> Z
+  geo = toCreasedNormals(geo, CREASE);
+  return assignWorldUVs(geo);
+}
+
+// Lift tab outline seen from outside: square towards the cover, softly rounded corners at the free end (+Y)
+function tabShape(width, length, r) {
+  const hw = width / 2;
+  const s = new THREE.Shape();
+  s.moveTo(-hw, -length / 2);
+  s.lineTo(hw, -length / 2);
+  s.lineTo(hw, length / 2 - r);
+  s.quadraticCurveTo(hw, length / 2, hw - r, length / 2);
+  s.lineTo(-hw + r, length / 2);
+  s.quadraticCurveTo(-hw, length / 2, -hw, length / 2 - r);
+  s.closePath();
+  return s;
+}
+
+// Engraved wordmark for the polished centre band (no emblem or stone on the clasp); dark on white, multiplied with the metal
+function claspEngraving() {
+  const w = 256;
+  const h = 1024;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, w, h);
+  const ink = 'rgb(96, 86, 72)';
+  ctx.strokeStyle = ink;
+  ctx.fillStyle = ink;
+
+  // Wordmark along the band, reading from the knuckle end towards the lift tab
+  ctx.save();
+  ctx.translate(w / 2, h * 0.5);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '500 118px "Cormorant Garamond", serif';
+  ctx.letterSpacing = '30px';
+  ctx.fillText('ORVANE', 15, 0);
+  ctx.restore();
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 8;
+  texture.userData.mimeType = 'image/jpeg';
+  return texture;
+}
+
+// Folding clasp as seen from outside, built like a real deployant: a brushed lower blade, a fine dark
+// parting line, a brushed, crowned cover with a polished centre band (continuing the bracelet's centre links)
+// carrying the engraved wordmark, a rounded lift tab behind a fine gap, and hinge knuckles towards the links.
 // Local frame like a link: Y along the bracelet, +Z outward (away from the wrist), X across.
-function buildClasp(length, width, polished, brushed) {
+function buildClasp(length, width, bandWidth, polished, brushed) {
   const group = new THREE.Group();
   group.name = 'Clasp';
-  const thick = 2.3;
-  const flat = (len, h) => {
-    const s = new THREE.Shape();
-    s.moveTo(-len / 2, -h / 2);
-    s.lineTo(len / 2, -h / 2);
-    s.lineTo(len / 2, h / 2);
-    s.lineTo(-len / 2, h / 2);
-    s.closePath();
-    return s;
-  };
-
+  const bottom = -1.15; // same thickness as the links (2.3 mm, centred on the wrist curve)
+  const split = -0.12; // parting line between blade and cover
+  const top = 0.95;
+  const crown = 0.18;
   const bodyLen = length - 1.6;
-  group.add(shadowed(new THREE.Mesh(profileSolid(flat(bodyLen, thick - 0.4), width, { bevel: 0.35 }), brushed)));
 
-  // Polished cover slightly proud of the body; the lift tab is a separate piece behind a fine gap
-  const tabLen = 2.6;
-  const coverLen = bodyLen - tabLen - 1.0;
-  const cover = shadowed(new THREE.Mesh(profileSolid(flat(coverLen, 0.6), width - 1.6, { bevel: 0.22 }), polished));
-  cover.position.set(0, -(tabLen + 0.25) / 2, (thick - 0.4) / 2 + 0.2);
-  const tab = shadowed(new THREE.Mesh(profileSolid(flat(tabLen, 0.6), width - 4.5, { bevel: 0.25 }), polished));
-  tab.position.set(0, coverLen / 2 - (tabLen + 0.25) / 2 + 0.25 + tabLen / 2, (thick - 0.4) / 2 + 0.2);
-  group.add(cover, tab);
+  // Brushed like the outer links: a polished blade mirrored the dark studio floor and read as a hole beside the tab
+  const blade = shadowed(new THREE.Mesh(crownedBar(width - 0.5, bodyLen, bottom, split - 0.08, 0, 0.25), brushed));
+  const core = new THREE.Mesh(crownedBar(width - 1.4, bodyLen - 1.0, split - 0.2, split + 0.12, 0, 0.05),
+    new THREE.MeshPhysicalMaterial({ name: 'ClaspGap', color: 0x14110d, metalness: 0.6, roughness: 0.5 }));
+  group.add(blade, core);
 
-  // Crystal emblem engraved/applied on the cover, pointing along the bracelet
-  const emblem = createCrystalMesh(CRYSTALS.find((c) => c.id === DIAL_LOGO.crystal), { stone: DIAL_LOGO.stone, metalMaterial: polished });
-  emblem.scale.setScalar(2.2);
-  emblem.position.set(0, cover.position.y, cover.position.z + 0.3);
-  emblem.traverse((o) => { if (o.isMesh) o.castShadow = true; });
-  group.add(emblem);
+  // Cover and lift tab share one length; the tab sits at the +Y end behind a 0.3 mm gap
+  const tabLen = 3.4;
+  const gap = 0.3;
+  const coverLen = bodyLen - tabLen - gap;
+  const coverY = -bodyLen / 2 + coverLen / 2;
+  const cover = shadowed(new THREE.Mesh(crownedBar(width, coverLen, split + 0.08, top, crown, 0.32), brushed));
+  cover.position.y = coverY;
+  group.add(cover);
 
-  // Hinge knuckles at both ends where the clasp blades pick up the last links
-  const knuckleGeo = assignWorldUVs(new THREE.CylinderGeometry(0.75, 0.75, width - 2.4, 32).rotateZ(Math.PI / 2));
+  // Polished band along the crown of the cover, with the engraving (UVs span the band)
+  const bandLen = coverLen - 2.2;
+  const bandGeo = crownedBar(bandWidth, bandLen, top + crown - 0.25, top + crown + 0.06, 0.03, 0.08);
+  const pos = bandGeo.attributes.position;
+  const uv = bandGeo.attributes.uv;
+  for (let i = 0; i < pos.count; i++) uv.setXY(i, pos.getX(i) / bandWidth + 0.5, pos.getY(i) / bandLen + 0.5);
+  const bandMaterial = polished.clone();
+  bandMaterial.map = claspEngraving();
+  const band = shadowed(new THREE.Mesh(bandGeo, bandMaterial));
+  band.position.y = coverY;
+  group.add(band);
+
+  // Lift tab: nearly the cover's width (a narrow tab left dark, shadowed blade showing beside it),
+  // a touch lower than the cover and behind a fine gap, so it reads as its own part
+  const tabW = width - 1.2;
+  const tabGeo = new THREE.ExtrudeGeometry(tabShape(tabW, tabLen, 1.1), {
+    depth: top + crown - split - 0.45, bevelEnabled: true, bevelThickness: 0.2, bevelSize: 0.2, bevelOffset: -0.2, bevelSegments: 3, curveSegments: 12,
+  });
+  const tab = shadowed(new THREE.Mesh(assignWorldUVs(toCreasedNormals(tabGeo, CREASE)), polished));
+  tab.position.set(0, bodyLen / 2 - tabLen / 2, split + 0.1);
+  group.add(tab);
+
+  // Hinge knuckles at both ends where the clasp blades pick up the last links; full link height so no gap shows
+  const knuckleGeo = assignWorldUVs(new THREE.CylinderGeometry(1.0, 1.0, width - 1.6, 32).rotateZ(Math.PI / 2));
   for (const sy of [-1, 1]) {
     const knuckle = shadowed(new THREE.Mesh(knuckleGeo, polished));
-    knuckle.position.set(0, sy * (bodyLen / 2 + 0.35), 0.1);
+    knuckle.position.set(0, sy * (bodyLen / 2 + 0.45), -0.05);
     group.add(knuckle);
   }
   return group;
@@ -506,7 +592,7 @@ function buildBracelet(polished, brushed, { endLinks = true } = {}) {
   }
 
   const tMid = tAt(total / 2);
-  const clasp = buildClasp(claspHalf * 2, (2 * outerX + outerW) * taper(total / 2), polished, brushed);
+  const clasp = buildClasp(claspHalf * 2, (2 * outerX + outerW) * taper(total / 2), centerW * taper(total / 2), polished, brushed);
   clasp.position.copy(pointAt(tMid));
   clasp.quaternion.copy(orient(tMid));
   group.add(clasp);
@@ -520,9 +606,9 @@ function buildLeather(polished) {
   const { pointAt, tangentAngle, total, tAt } = wristCurve();
 
   // Path starts under the lugs, follows the wrist and ends under the opposite lugs
-  const points = [new THREE.Vector3(0, 20.5, -1.9)];
+  const points = [new THREE.Vector3(0, STRAP_START - 5.4, -1.9)];
   for (let i = 0; i <= 80; i++) points.push(pointAt(tAt((i / 80) * total)));
-  points.push(new THREE.Vector3(0, -20.5, -1.9));
+  points.push(new THREE.Vector3(0, -(STRAP_START - 5.4), -1.9));
   const path = new THREE.CatmullRomCurve3(points);
 
   // Cross-section: for a curve in the YZ plane three.js maps shape x to world X (width), shape y to thickness
@@ -578,7 +664,7 @@ function buildLeather(polished) {
   return group;
 }
 
-// Shared with other models: bracelet and leather follow the same wrist, starting 25.9 mm from the case centre
+// Shared with other models: bracelet and leather follow the same wrist, starting STRAP_START from the case centre
 export function buildStrap(polished, brushed, { endLinks = true } = {}) {
   const strap = new THREE.Group();
   strap.name = WATCH_PARTS.strap;
