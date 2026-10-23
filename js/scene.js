@@ -57,7 +57,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   useGlassEnvironment(watch, glassEnvironment);
   rig.add(watch);
 
-  const camera = new THREE.PerspectiveCamera(FOV, 1, 20, 2500);
+  const camera = new THREE.PerspectiveCamera(FOV, 1, 4, 2500);
   const target = new THREE.Vector3(0, 0, 0);
   const viewDir = new THREE.Vector3(0.28, 0.18, 1).normalize();
 
@@ -119,7 +119,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
     const d = fitDistance(camera.aspect);
     const dir = camera.position.lengthSq() ? camera.position.clone().sub(controls.target).normalize() : viewDir;
     camera.position.copy(controls.target).addScaledVector(dir, d);
-    controls.minDistance = d * 0.4;
+    controls.minDistance = d * 0.18; // close enough to read the movement engravings
     controls.maxDistance = d * 1.5;
     applyFrame();
   }
