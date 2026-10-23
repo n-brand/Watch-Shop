@@ -161,22 +161,21 @@ function getFinishes() {
   return finishes;
 }
 
-// Rotor engraving on top of the circular graining: lettering along the rim, readable from behind
-function rotorEngraving(radius) {
+// Engraving on top of the circular graining: lettering along a circle (centred at the top, or spread evenly
+// around the full circle), readable from behind. Sizes in mm on a disc of the given radius.
+function discEngraving(radius, { text, textR, letter, advance, ink, fullCircle = false, size = 1024 }) {
   const { map } = getFinishes().graining;
-  return canvasTexture(1024, (ctx, size) => {
+  return canvasTexture(size, (ctx) => {
     ctx.drawImage(map.image, 0, 0, size, size);
     const c = size / 2;
     const scale = c / radius;
     ctx.translate(c, c);
-    ctx.fillStyle = 'rgba(92, 78, 52, 0.8)';
-    ctx.font = `500 ${0.7 * scale}px "Inter", sans-serif`;
+    ctx.fillStyle = ink;
+    ctx.font = `500 ${letter * scale}px "Inter", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    // Designer credit on the rotor rim, as watchmakers sign their movements
-    const text = 'ORVANE  ·  AUTOMATIC  ·  OR-01  ·  DESIGN NICOLAS BRAND';
-    const r = 9.68 * scale;
-    const spacing = (0.48 * scale) / r;
+    const r = textR * scale;
+    const spacing = fullCircle ? (Math.PI * 2) / text.length : (advance * scale) / r;
     const start = -Math.PI / 2 - ((text.length - 1) * spacing) / 2;
     [...text].forEach((ch, i) => {
       ctx.save();
@@ -210,7 +209,12 @@ function createMaterials() {
     screw: new THREE.MeshPhysicalMaterial({ name: 'Screw', color: 0xdfe2e6, metalness: 1, roughness: 0.12, side: THREE.DoubleSide }),
     ruby: new THREE.MeshPhysicalMaterial({ name: 'Ruby', color: 0xa3164a, metalness: 0, roughness: 0.04, ior: 1.77, specularIntensity: 1, clearcoat: 1, clearcoatRoughness: 0.02, side: THREE.DoubleSide }),
     chaton: new THREE.MeshPhysicalMaterial({ name: 'Chaton', color: 0xdfe2e6, metalness: 1, roughness: 0.12, side: THREE.DoubleSide }),
-    rotor: new THREE.MeshPhysicalMaterial({ name: 'Rotor', anisotropy: 0.75, anisotropyMap: f.circularAnisotropy, color: gold, metalness: 1, roughness: 0.8, map: rotorEngraving(10.45), roughnessMap: f.graining.roughnessMap }),
+    // Designer credit on the rotor rim, as watchmakers sign their movements
+    rotor: new THREE.MeshPhysicalMaterial({ name: 'Rotor', anisotropy: 0.75, anisotropyMap: f.circularAnisotropy, color: gold, metalness: 1, roughness: 0.8, roughnessMap: f.graining.roughnessMap,
+      map: discEngraving(10.45, { text: 'ORVANE  ·  AUTOMATIC  ·  OR-01  ·  DESIGN NICOLAS BRAND', textR: 9.68, letter: 0.7, advance: 0.48, ink: 'rgba(92, 78, 52, 0.8)' }) }),
+    // Casing ring face: rhodium-plated, circular-grained, with black-filled lettering running all the way round
+    ringFace: new THREE.MeshPhysicalMaterial({ name: 'RingFace', anisotropy: 0.75, anisotropyMap: f.circularAnisotropy, color: 0xc9ccd1, metalness: 1, roughness: 0.55, roughnessMap: f.graining.roughnessMap,
+      map: discEngraving(RING_STEP + 0.05, { text: 'ORVANE  ·  CALIBRE OR-01  ·  AUTOMATIC  ·  31 JEWELS  ·  DESIGN NICOLAS BRAND  ·  '.repeat(2), textR: 10.98, letter: 0.3, ink: 'rgba(28, 30, 34, 0.9)', fullCircle: true, size: 2048 }) }),
     rotorEdge: new THREE.MeshPhysicalMaterial({ name: 'RotorEdge', color: gold, metalness: 1, roughness: 0.12 }),
     satinGold: new THREE.MeshPhysicalMaterial({ name: 'SatinGold', anisotropy: 0.75, anisotropyMap: f.circularAnisotropy, color: gold, metalness: 1, roughness: 0.7, map: f.graining.map, roughnessMap: f.graining.roughnessMap }),
     ring: new THREE.MeshPhysicalMaterial({ name: 'CasingRing', color: 0x8d9198, metalness: 1, roughness: 0.45, side: THREE.DoubleSide }),
@@ -619,8 +623,24 @@ function buildCasingRing(m) {
     return s;
   };
   const frost = { tile: getFinishes().frost.tile };
-  group.add(solid(annulus(RING_INNER, RING_STEP + 0.05), Z.base + 0.3, Z.glassInner + 0.2, m.plate, m.bevel, {
-    bevel: 0.12, bevelSegments: 3, curveSegments: 160, uvs: frost,
+  // Inner part: engraved, circular-grained face; its polished inner wall is fluted (96 shallow grooves),
+  // so it breaks the light into fine stripes instead of one plain grey band
+  const inner = annulus(RING_INNER, RING_STEP + 0.05);
+  const flutes = 96;
+  const fluted = new THREE.Path();
+  for (let k = 0; k < flutes; k++) {
+    for (let j = 0; j < 8; j++) {
+      const t = j / 8; // 0..1 across one groove, cusp at t = 0
+      const a = -((k + t) / flutes) * Math.PI * 2; // clockwise, as holes must run
+      const r = RING_INNER + 0.07 * Math.sqrt(Math.sin(t * Math.PI));
+      if (k === 0 && j === 0) fluted.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+      else fluted.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+  }
+  fluted.closePath();
+  inner.holes = [fluted];
+  group.add(solid(inner, Z.base + 0.3, Z.glassInner + 0.2, m.ringFace, m.bevel, {
+    bevel: 0.08, bevelSegments: 3, curveSegments: 160, uvs: { disc: { x: 0, y: 0, r: RING_STEP + 0.05 }, mirror: true },
   }));
   // The outer part only closes the view; it casts no shadow (its shadow edge stepped along the window rim)
   const outer = solid(annulus(RING_STEP, 17.55), Z.base + 0.3, -4.92, m.plate, m.plate, {

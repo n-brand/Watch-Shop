@@ -187,5 +187,14 @@
     "note": "Meridian: Werkhaltering gestuft bis zur Gehäusewand (kein Blick mehr unter den Boden auf Kronenwelle und Bandanstösse), Brückenfüsse vollständig vor dem Ring statt abgeschnitten, Kaliber-Gravur passend zwischen Schraube und Lagerstein, gedrehte Teile mit umlaufendem Schliff (kein Sägezahnmuster auf der Bodenfase)",
     "bytes": 2343560,
     "thumb": "v022.webp"
+  },
+  {
+    "id": "v023",
+    "model": "meridian",
+    "file": "v023.glb",
+    "date": "2026-10-23T21:11:08.165Z",
+    "note": "Meridian: Werkhaltering veredelt: rhodinierte Deckfläche mit Kreisschliff und umlaufender, schwarz gefuellter Gravur, polierte Innenwand mit 96 Rillen statt glatter Aluwand",
+    "bytes": 2457240,
+    "thumb": "v023.webp"
   }
 ]
