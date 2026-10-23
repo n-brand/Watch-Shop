@@ -20,6 +20,8 @@ const APERTURE_HW = 14.0;
 const APERTURE_HH = 14.9;
 const APERTURE_N = 5.0;
 const CHAMFER = 0.9; // polished slope from the brushed bezel top down to the display
+// Oblong pushers on the flanks: length along the case (Y), height across the flank (Z), depth = how far they reach out
+const PUSHER = { y: 8.4, length: 5.2, height: 2.0, depth: 1.95 };
 
 const OUTLINE_SEGMENTS = 192;
 
@@ -122,29 +124,41 @@ function buildCase(polished, brushed) {
     group.add(lug);
   }
 
-  // Pushers: two per side, flat polished caps with a chamfer on a thin tube, pointing along ±X
-  const pusherGeo = pusherGeometry();
+  // Pushers: two per side, oblong polished keys on a dark gasket, set into the flank
   const pusherZ = -1.0;
   const flankX = CASE_HW * (1 - CASE_TAPER * (1 - (pusherZ - CASE_BOTTOM) / (CASE_TOP - CASE_BOTTOM)));
+  const keyGeo = pusherGeometry(PUSHER.length, PUSHER.height, PUSHER.depth, 0.32);
+  const gasketGeo = pusherGeometry(PUSHER.length + 0.5, PUSHER.height + 0.5, 0.9, 0.12);
+  const gasket = new THREE.MeshPhysicalMaterial({ name: 'Gasket', color: 0x0c0b0a, metalness: 0, roughness: 0.6 });
   for (const sx of [-1, 1]) {
-    for (const y of [-8.2, 8.2]) {
-      const pusher = shadowed(new THREE.Mesh(pusherGeo, polished));
-      pusher.position.set(sx * (flankX - 0.6), y, pusherZ);
-      pusher.scale.x = sx;
-      group.add(pusher);
+    for (const y of [-PUSHER.y, PUSHER.y]) {
+      // Both start inside the flank (it leans in towards the back), so no gap shows from any angle
+      const seat = new THREE.Mesh(gasketGeo, gasket);
+      seat.position.set(sx * (flankX - 0.6), y, pusherZ);
+      const key = shadowed(new THREE.Mesh(keyGeo, polished));
+      key.position.set(sx * (flankX - 0.6), y, pusherZ);
+      for (const mesh of [seat, key]) mesh.scale.x = sx;
+      group.add(seat, key);
     }
   }
   return group;
 }
 
-// Lathe profile [radius, distance from the case flank]: tube, shoulder, cap with chamfered, slightly domed face
-function pusherGeometry() {
-  const profile = [
-    [0.85, 0], [0.85, 1.3], [1.2, 1.35], [1.32, 1.5], [1.32, 2.35], [1.18, 2.55], [0.9, 2.64], [0.001, 2.7],
-  ].map(([r, y]) => new THREE.Vector2(r, y));
-  const geo = new THREE.LatheGeometry(profile, 48);
-  geo.rotateZ(-Math.PI / 2);
-  return assignWorldUVs(geo);
+// Oblong key: stadium outline in the flank plane (length along Y, height along Z), extruded outward along +X
+// with a rounded bevel, so the face reads flat and polished with soft highlights on its edge
+function pusherGeometry(length, height, depth, bevel) {
+  const r = height / 2;
+  const half = length / 2 - r;
+  const s = new THREE.Shape();
+  s.moveTo(-half, -r);
+  s.lineTo(half, -r);
+  s.absarc(half, 0, r, -Math.PI / 2, Math.PI / 2, false);
+  s.lineTo(-half, r);
+  s.absarc(-half, 0, r, Math.PI / 2, Math.PI * 1.5, false);
+  // profileSolid: shape x -> Y, shape y -> Z, centred extrusion along X; shift so it starts at x = 0
+  const geo = profileSolid(s, depth, { bevel, segments: 4, curveSegments: 16 });
+  geo.translate(depth / 2, 0, 0);
+  return geo;
 }
 
 // Top frame around the display: polished body with rounded edges, a vertically brushed flat top

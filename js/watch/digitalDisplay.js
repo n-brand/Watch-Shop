@@ -63,7 +63,16 @@ function fillPolygon(ctx, pts, slant, baseY) {
   ctx.fill();
 }
 
-function drawDigits(layers, text, { x, y, h, slant = 0.1 }) {
+const SLANT = 0.1;
+
+// Width drawDigits needs for text at height h: digit pitch, separators, no trailing gap, plus the slant at the top
+function digitsWidth(text, h, slant = SLANT) {
+  let width = 0;
+  for (const ch of text) width += ':. '.includes(ch) ? h * 0.13 * 2.2 : h * 0.68;
+  return width - h * 0.16 + h * slant;
+}
+
+function drawDigits(layers, text, { x, y, h, slant = SLANT }) {
   const w = h * 0.52;
   const t = h * 0.13;
   const pitch = w + h * 0.16;
@@ -212,22 +221,23 @@ export function createDisplayPanel({ width, height }) {
     drawLabel(glow, WEEKDAYS[date.getDay()], win.x + pad, top + small / 2, { size: small * 0.95, weight: 500, spacing: 0.15, color: COLORS.lit, align: 'left' });
     const dd = String(date.getDate()).padStart(2, '0');
     const mo = String(date.getMonth() + 1).padStart(2, '0');
-    const dateW = (small * 0.52 + small * 0.16) * 4 + small * 0.13 * 2.2;
-    drawDigits(layers, `${dd}.${mo}`, { x: win.x + win.w - pad - dateW, y: top, h: small });
+    drawDigits(layers, `${dd}.${mo}`, { x: win.x + win.w - pad - digitsWidth('88.88', small), y: top, h: small });
 
-    // Main row: HH:MM large, seconds smaller on the baseline
-    const big = win.h * 0.5;
+    // Main row: HH:MM large, seconds smaller on the baseline. The digit height is the largest that keeps
+    // the whole row (measured with 8s, so it never changes width) inside the window with padding on both sides.
+    const SEC = 0.55;
+    const secGap = mm(0.4);
+    const rowWidth = (h) => digitsWidth('88:88', h) + h * 0.16 + secGap + digitsWidth('88', h * SEC);
+    const big = Math.min(win.h * 0.5, (win.w - 2 * pad - secGap) / ((rowWidth(100) - secGap) / 100));
     const mainY = win.y + win.h - big - mm(1.1);
     const hh = String(date.getHours()).padStart(2, '0');
     const mi = String(date.getMinutes()).padStart(2, '0');
     const ss = String(date.getSeconds()).padStart(2, '0');
     const colon = date.getSeconds() % 2 === 0 ? ':' : ' ';
-    const secH = big * 0.55;
-    const mainW = (big * 0.52 + big * 0.16) * 4 + big * 0.13 * 2.2 - big * 0.16;
-    const secW = (secH * 0.52 + secH * 0.16) * 2;
-    const startX = win.x + (win.w - mainW - secW - mm(0.8)) / 2;
+    const secH = big * SEC;
+    const startX = win.x + (win.w - rowWidth(big)) / 2;
     const endX = drawDigits(layers, `${hh}${colon}${mi}`, { x: startX, y: mainY, h: big });
-    drawDigits(layers, ss, { x: endX + mm(0.4), y: mainY + big - secH, h: secH });
+    drawDigits(layers, ss, { x: endX + secGap, y: mainY + big - secH, h: secH });
 
     // Soft bloom around lit segments in the glow layer
     glow.save();

@@ -79,5 +79,14 @@
     "note": "Neues Modell Lumen (digital): Kissengehäuse 37 × 40 mm mit integrierten, verjüngten Bandanstössen, gebürstete Lunette mit polierter Fase, flaches Saphirglas, Display mit 7-Segment-Anzeige (Zeit, Sekunden, Wochentag, Datum) und Orvane-Kristall, vier Drücker, gravierter Gehäuseboden; das Display zeigt live die echte Uhrzeit",
     "bytes": 2804588,
     "thumb": "v010.webp"
+  },
+  {
+    "id": "v011",
+    "model": "lumen",
+    "file": "v011.glb",
+    "date": "2026-10-23T11:14:05.361Z",
+    "note": "Lumen: längliche, flache Drücker mit polierter Fase auf dunkler Dichtungsfuge statt runder Knöpfe; Zeitzeile im Display wird ausgemessen und passt mit den Sekunden immer ins Anzeigefenster",
+    "bytes": 2952740,
+    "thumb": "v011.webp"
   }
 ]
