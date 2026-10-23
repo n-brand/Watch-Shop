@@ -1,6 +1,7 @@
 // Renders the product stills for the shop page from the procedural watches.
 // Open http://127.0.0.1:5173/tools/render-stills.html (local server) and press the button,
-// or in the console: await window.renderStills() (or renderStills({ models: ['lumen'] }) for one model)
+// or in the console: await window.renderStills() (or renderStills({ models: ['lumen'] }) for one model,
+// renderStills({ only: ['hero'], store: false }) for a quick look without saving)
 import { createViewer } from '../js/scene.js';
 import { updateHands } from '../js/clock.js';
 import { CASE_OPTIONS, STRAP_OPTIONS, DIAL_OPTIONS, DEFAULT_DIAL, WATCH_MODELS, renderImage } from '../js/products.js';
@@ -64,12 +65,13 @@ async function save(name, blob) {
   if (!res.ok) throw new Error(`${name}: ${res.status} ${await res.text()}`);
 }
 
-async function renderStills({ store = true, models = WATCH_MODELS.map((m) => m.id) } = {}) {
+// only: shot names to render (e.g. ['hero']) for a quick look, together with store: false
+async function renderStills({ store = true, models = WATCH_MODELS.map((m) => m.id), only } = {}) {
   const out = document.getElementById('out');
   const status = document.getElementById('status');
   out.replaceChildren();
   const sizes = {};
-  const shots = SHOTS.filter((s) => models.includes(s.model));
+  const shots = SHOTS.filter((s) => models.includes(s.model) && (!only || only.includes(s.name)));
   for (const [i, shot] of shots.entries()) {
     status.textContent = ` ${i + 1} / ${shots.length}: ${shot.name}`;
     const blob = await renderShot(shot);
@@ -86,6 +88,7 @@ async function renderStills({ store = true, models = WATCH_MODELS.map((m) => m.i
 }
 
 window.renderStills = renderStills;
+window.stillsViewer = viewer; // for experiments in the console (exposure, lights)
 const button = document.getElementById('render');
 button.disabled = false;
 button.addEventListener('click', () => renderStills().catch((err) => {

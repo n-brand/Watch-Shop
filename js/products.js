@@ -21,9 +21,9 @@ export const STRAP_OPTIONS = [
 
 // Dial colours for models with a dial (Meridian): sunburst centre, darker edge, print colour (passed to
 // createDialTexture). The light dial gets a dark gold print so it stays legible.
-// Night blue is the standard dial (also the one the code builds, see createDialTexture); black was dropped.
+// Royal blue is the standard dial (also the one the code builds, see createDialTexture); black was dropped.
 export const DIAL_OPTIONS = [
-  { id: 'blue', label: 'Nachtblau', base: '#203252', edge: '#0a1325', print: '#e3c99a' },
+  { id: 'blue', label: 'Königsblau', base: '#2f5cb8', edge: '#122a66', print: '#e3c99a' },
   { id: 'green', label: 'Waldgrün', base: '#233c2e', edge: '#0b1810', print: '#e3c99a' },
   { id: 'silver', label: 'Silber', base: '#e1ded7', edge: '#aaa59b', print: '#6f5322' },
 ].map((d) => ({ ...d, swatch: `radial-gradient(circle at 40% 35%, ${d.base}, ${d.edge})` }));

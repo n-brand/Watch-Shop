@@ -75,7 +75,8 @@ export function addStudioLights(scene) {
 // and rolls off highlights so polished faces do not burn out to white.
 export function configureRenderer(renderer) {
   renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  // A little over 1 so the watch reads lighter on the dark page; tested 1.0-1.3, gold keeps its highlights up to ~1.2
+  renderer.toneMappingExposure = 1.2;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 }

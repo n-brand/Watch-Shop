@@ -148,8 +148,8 @@ export function createDial(texture) {
   });
 }
 
-// Defaults are the standard night-blue dial, so every watch built in code (and every saved version) has it
-export async function createDialTexture({ base = '#203252', edge = '#0a1325', print = '#e3c99a' } = {}) {
+// Defaults are the standard royal-blue dial, so every watch built in code (and every saved version) has it
+export async function createDialTexture({ base = '#2f5cb8', edge = '#122a66', print = '#e3c99a' } = {}) {
   await Promise.all([
     document.fonts.load('400 100px "Cormorant Garamond"'),
     document.fonts.load('400 40px "Inter"'),
