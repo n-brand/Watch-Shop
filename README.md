@@ -27,14 +27,14 @@ Danach `bytes` des Eintrags in `assets/models/history/index.json` anpassen.
 
 ## Seiten
 
-- `index.html` – Shop mit Produktbildern, Story, Details und Konfigurator; im Konfigurator Modell per Dropdown wählen (Meridian, Lumen, Abyss), bei der Meridian die Zifferblattfarbe, und die Uhr in 3D drehen; bei der Abyss lässt sich die Lünette per Klick (oder gedrückt halten) Minute für Minute drehen (three.js lädt erst, wenn der Konfigurator in Sicht kommt)
+- `index.html` – Shop mit Produktbildern, Story, Details und Konfigurator; im Konfigurator Modell per Dropdown wählen (Meridian, Lumen, Abyss), bei der Meridian die Zifferblattfarbe, und die Uhr in 3D drehen; bei der Abyss lässt sich die Lünette per Klick (oder gedrückt halten) Minute für Minute drehen, und die Stoppuhr läuft über die Drücker (oben Start/Stopp, unten zurück) (three.js lädt erst, wenn der Konfigurator in Sicht kommt)
 - `tests.html` – interne Experimente, z. B. das Lumen-Display nur mit HTML/CSS
 - `history.html` – Modell-Verlauf aller gespeicherten Uhrenversionen (glb) mit drehbarer 3D-Detailansicht, Filter nach Modell (Meridian, Lumen, Abyss), auf dem Handy als Vollbild mit Pfeilen. Versionen sind pro Modell nummeriert (Meridian 1, 2, 3 …, Lumen 1, 2 …), Links lauten z. B. `history.html#meridian-21`
 - `logos.html` – Entwürfe des Orvane-Kristalls in 2D und 3D
 
 ## Aufbau
 
-- `js/watch/` – die Uhren aus Code: Meridian (analog: Gehäuse, Zifferblatt, Zeiger, Armband, Materialien) Lumen (digital: Kissengehäuse, 7-Segment-Display mit Live-Uhrzeit, gleiches Armband) und Abyss (Taucheruhr auf Basis der Meridian: einseitig drehbare Lünette mit Keramikeinlage, Leuchtindizes und -zeiger, Datum, verschraubte Krone mit Kronenschutz)
+- `js/watch/` – die Uhren aus Code: Meridian (analog: Gehäuse, Zifferblatt, Zeiger, Armband, Materialien) Lumen (digital: Kissengehäuse, 7-Segment-Display mit Live-Uhrzeit, gleiches Armband) und Abyss (Chronograph auf Basis der Meridian: drehbare blaue Lünette, blaues Sonnenschliff-Zifferblatt mit Tachymeter, drei Hilfszifferblätter, Datum bei 4:30, zwei Drücker mit funktionierender Stoppuhr)
 - `js/logo/` – der Orvane-Kristall als 3D-Facetten (SVG-Logo und 3D-Modell aus derselben Definition)
 - `js/scene.js`, `js/studio.js` – 3D-Ansicht, Studio-Licht, Kamera (Verlauf und Render-Werkzeug)
 - `assets/img/renders/` – Produktbilder der Uhren (WebP, transparenter Hintergrund), pro Modell, Gehäuse und Armband

@@ -33,13 +33,14 @@ function findMovers(root) {
   return movers;
 }
 
-// Parts the user can turn by hand in steps (userData.ratchet = { step }, e.g. a dive watch bezel)
-function findRatchets(root) {
-  const ratchets = [];
+// Parts tagged in userData: 'ratchet' ({ step }: turned by hand in steps, e.g. a bezel), 'pusher'
+// ('startStop' / 'reset': chronograph pushers), 'chrono' ({ period, beat, jump }: stopwatch hands)
+function findTagged(root, key) {
+  const found = [];
   root.traverse((obj) => {
-    if (obj.userData.ratchet) ratchets.push(obj);
+    if (obj.userData[key]) found.push(obj);
   });
-  return ratchets;
+  return found;
 }
 
 // Fades the strap (opacity 0..1) so one can look past the clasp at the movement. Faded meshes get transparent
@@ -87,7 +88,9 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   let parts = loaded.parts;
   let display = liveDisplay(parts);
   let movers = findMovers(watch);
-  let ratchets = findRatchets(watch);
+  let ratchets = findTagged(watch, 'ratchet');
+  let pushers = findTagged(watch, 'pusher');
+  let chronoHands = findTagged(watch, 'chrono');
   useGlassEnvironment(watch, glassEnvironment);
   rig.add(watch);
 
@@ -124,17 +127,32 @@ export async function createViewer(container, { reducedMotion = false, modelPath
     if (e.pointerType === 'touch') controls.enableZoom = true;
   }, { capture: true });
 
-  // Turning parts by hand: pressing on one turns it a step counter-clockwise (seen from the front), holding
-  // keeps it clicking. Listens in the capture phase, so the orbit controls don't start a drag at the same time.
+  // Parts worked by hand. A bezel: pressing turns it a step counter-clockwise (seen from the front), holding
+  // keeps it clicking. Chronograph pushers: start/stop and reset the stopwatch (reset only while stopped, as
+  // on a real chronograph). Listens in the capture phase, so the orbit controls don't start a drag as well.
+  let stopwatch = { running: false, since: 0, elapsed: 0 };
+  const stopwatchTime = (now) => stopwatch.elapsed + (stopwatch.running ? (now - stopwatch.since) / 1000 : 0);
+  function push(pusher) {
+    const now = performance.now();
+    pusher.userData.pressedAt = now;
+    if (pusher.userData.pusher === 'startStop') {
+      stopwatch = stopwatch.running
+        ? { running: false, since: 0, elapsed: stopwatchTime(now) }
+        : { running: true, since: now, elapsed: stopwatch.elapsed };
+    } else if (!stopwatch.running) {
+      stopwatch.elapsed = 0;
+    }
+  }
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
-  const ratchetAt = (e) => {
-    if (!ratchets.length) return null;
+  const controlAt = (e) => {
+    const targets = [...ratchets, ...pushers];
+    if (!targets.length) return null;
     const rect = renderer.domElement.getBoundingClientRect();
     pointer.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
     raycaster.setFromCamera(pointer, camera);
-    let obj = raycaster.intersectObjects(ratchets, true)[0]?.object;
-    while (obj && !obj.userData.ratchet) obj = obj.parent;
+    let obj = raycaster.intersectObjects(targets, true)[0]?.object;
+    while (obj && !obj.userData.ratchet && !obj.userData.pusher) obj = obj.parent;
     return obj ?? null;
   };
   const turn = (obj) => {
@@ -151,9 +169,14 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   };
   container.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
-    const obj = ratchetAt(e);
+    const obj = controlAt(e);
     if (!obj) return;
     controls.enabled = false;
+    if (obj.userData.pusher) {
+      push(obj);
+      holding = {};
+      return;
+    }
     turn(obj);
     holding = { delay: setTimeout(() => { holding.repeat = setInterval(() => turn(obj), 120); }, 380) };
   }, { capture: true });
@@ -161,7 +184,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   window.addEventListener('pointercancel', release);
   renderer.domElement.addEventListener('pointermove', (e) => {
     if (e.pointerType !== 'mouse' || e.buttons) return;
-    renderer.domElement.style.cursor = ratchetAt(e) ? 'pointer' : '';
+    renderer.domElement.style.cursor = controlAt(e) ? 'pointer' : '';
   });
 
   function fitDistance(aspect) {
@@ -238,6 +261,21 @@ export async function createViewer(container, { reducedMotion = false, modelPath
       const target = obj.userData.ratchetTarget;
       if (target !== undefined) obj.rotation.z += (target - obj.rotation.z) * Math.min(1, dt * 20);
     }
+    // Stopwatch hands: smooth with `beat` steps a second, or jumping every `jump` seconds
+    const elapsed = stopwatchTime(now);
+    for (const obj of chronoHands) {
+      const { period, beat, jump } = obj.userData.chrono;
+      let t = elapsed;
+      if (beat) t = Math.floor(t * beat) / beat;
+      if (jump) t = Math.floor(t / jump) * jump;
+      obj.rotation.z = -(t / period) * Math.PI * 2;
+    }
+    // A pressed pusher dips in for a moment
+    for (const obj of pushers) {
+      const depth = now - (obj.userData.pressedAt ?? -1e9) < 160 ? 0.3 : 0;
+      const [ax, ay] = obj.userData.axis;
+      obj.position.set(-ax * depth, -ay * depth, 0);
+    }
     controls.update();
     updateStrapFade();
     renderer.render(scene, camera);
@@ -272,7 +310,10 @@ export async function createViewer(container, { reducedMotion = false, modelPath
     parts = next.parts;
     display = nextDisplay;
     movers = findMovers(watch);
-    ratchets = findRatchets(watch);
+    ratchets = findTagged(watch, 'ratchet');
+    pushers = findTagged(watch, 'pusher');
+    chronoHands = findTagged(watch, 'chrono');
+    stopwatch = { running: false, since: 0, elapsed: 0 };
     rig.add(watch);
     render();
     return true;

@@ -250,5 +250,14 @@
     "note": "Meridian: Seriennummer «N° 0427» metallisiert auf die Innenseite des Saphirbodens gedruckt, über der Platine bei 6 Uhr",
     "bytes": 2555668,
     "thumb": "v029.webp"
+  },
+  {
+    "id": "v030",
+    "model": "abyss",
+    "file": "v030.glb",
+    "date": "2026-10-24T17:40:00.477Z",
+    "note": "Abyss wird zum Sport-Chronographen: blaue drehbare Lünette mit grossen Zahlen, blaues Sonnenschliff-Zifferblatt mit Tachymeter, drei Hilfszifferblätter (laufende Sekunde, 30-Minuten- und 12-Stunden-Zähler), Balkenindizes, Stabzeiger mit Leuchtmasse, Datum bei 4:30, zwei Drücker – die Stoppuhr läuft per Klick (oben Start/Stopp, unten zurück)",
+    "bytes": 2767440,
+    "thumb": "v030.webp"
   }
 ]

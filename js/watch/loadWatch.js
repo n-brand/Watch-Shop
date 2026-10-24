@@ -31,14 +31,15 @@ async function buildModel(model) {
     return buildDigitalWatch();
   }
   if (model === 'abyss') {
-    const { buildDiverWatch } = await import('./diverWatch.js');
-    return buildDiverWatch();
+    const { buildAbyssWatch } = await import('./abyssWatch.js');
+    return buildAbyssWatch();
   }
   return buildProceduralWatch();
 }
 
 // Returns the watch root plus named parts. A glTF model needs nodes named as in WATCH_PARTS;
-// hands must pivot at the dial centre and rotate around local Z with 12 o'clock at +Y.
+// hands pivot at their node's origin (the dial centre, or a subdial centre) and rotate around local Z with
+// 12 o'clock at +Y.
 // A digital model has a Display mesh instead of hands (see digitalDisplay.js).
 export async function loadWatch({ path = MODEL_PATH, model = DEFAULT_MODEL } = {}) {
   const root = path ? await loadGltf(path) : await buildModel(model);

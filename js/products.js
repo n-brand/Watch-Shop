@@ -5,7 +5,7 @@
 export const WATCH_MODELS = [
   { id: 'meridian', label: 'Meridian', detail: 'Automatik · 41 mm', prices: { rose: 24800, yellow: 25600, steel: 9400 }, dials: true },
   { id: 'lumen', label: 'Lumen', detail: 'Digital · 37 × 40 mm', prices: { rose: 12600, yellow: 13200, steel: 4200 } },
-  { id: 'abyss', label: 'Abyss', detail: 'Taucheruhr · 300 m · 42 mm', prices: { rose: 27900, yellow: 28600, steel: 11200 } },
+  { id: 'abyss', label: 'Abyss', detail: 'Chronograph · Automatik · 42 mm', prices: { rose: 27900, yellow: 28600, steel: 11200 } },
 ];
 
 export const CASE_OPTIONS = [
@@ -63,7 +63,7 @@ export const COLLECTION = [
   {
     id: 'abyss-steel',
     name: 'Abyss',
-    variant: 'Taucheruhr · Edelstahl · 42 mm',
+    variant: 'Chronograph · Edelstahl · 42 mm',
     price: 11200,
     image: 'assets/img/collection/abyss-steel.svg',
   },
