@@ -18,8 +18,8 @@ const DIAL_LOGO = { crystal: 'set-brilliant', stone: 'diamond', height: 4.0 };
 
 const DIAL_R = 17.6;
 const DIAL_Z = 1.8;
-const CASE_R = 20.92;
-const LUG_INNER_X = 10.0; // half of the 20 mm bracelet width
+export const CASE_R = 20.92;
+export const LUG_INNER_X = 10.0; // half of the 20 mm bracelet width
 // Where the strap starts (distance from the case centre along 12/6 o'clock). The lugs end here, the strap follows
 // the wrist from here; shorter lugs therefore mean a longer strap on the same wrist. Was 25.9 (long lugs).
 export const STRAP_START = 23.4;
@@ -41,7 +41,7 @@ export function shadowed(mesh) {
 // UVs: the lathe's own (u around the axis, v along the profile), scaled to ~24 mm per tile like assignWorldUVs.
 // Brushing then runs around the circle, as on a turned part; the per-vertex axis projection of assignWorldUVs
 // flipped between neighbouring vertices on 45° chamfers and showed as a sawtooth band.
-function lathe(points, segments = 192) {
+export function lathe(points, segments = 192) {
   const geo = new THREE.LatheGeometry(points.map(([r, z]) => new THREE.Vector2(r, z)), segments);
   geo.rotateX(Math.PI / 2);
   const meanR = points.reduce((sum, [r]) => sum + r, 0) / points.length;
@@ -254,7 +254,7 @@ function hub(radius, height, metal) {
 // pipe: { radius, down } adds the pipe the hand sits on, reaching `down` mm below the hand to the dial or to
 // the hand underneath (hour pipe, minute pipe, seconds arbor nest inside each other), so the hand stack is
 // closed in the centre and nothing can be seen through underneath the hands
-function buildHand(name, geometry, z, metal, hubRadius, hubHeight, pipe) {
+export function buildHand(name, geometry, z, metal, hubRadius, hubHeight, pipe) {
   const pivot = new THREE.Group();
   pivot.name = name;
   pivot.position.z = z;
@@ -308,7 +308,7 @@ function buildGlass() {
 }
 
 // Exhibition caseback: the OR-01 movement (see movement.js) with its rotor, behind a sapphire window, all facing -Z
-function buildCaseback() {
+export function buildCaseback() {
   const group = new THREE.Group();
   group.name = 'Caseback';
   const { movement, rotor } = buildMovement();

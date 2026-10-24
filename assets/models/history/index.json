@@ -232,5 +232,23 @@
     "note": "Meridian: Brückenfüsse von Unruhkloben und Federhausbrücke ganz auf die Platine verlegt (Schrauben sassen halb über Aussparungen), Reduktionsrad kleiner und weiter innen (ragte bis an den Werkhaltering)",
     "bytes": 2552252,
     "thumb": "v027.webp"
+  },
+  {
+    "id": "v028",
+    "model": "abyss",
+    "file": "v028.glb",
+    "date": "2026-10-24T17:05:27.949Z",
+    "note": "Abyss: neue Taucheruhr auf Basis der Meridian – einseitig drehbare Lünette mit schwarzer Keramikeinlage, Minutenskala und Leuchtpunkt (per Klick drehbar), mattschwarzes Zifferblatt mit Leuchtindizes, Datum bei 3, Schwertzeiger mit Leuchtmasse, Sekundenzeiger mit roter Spitze, verschraubte Krone mit Kronenschutz, Saphirboden mit OR-01",
+    "bytes": 2658808,
+    "thumb": "v028.webp"
+  },
+  {
+    "id": "v029",
+    "model": "meridian",
+    "file": "v029.glb",
+    "date": "2026-10-24T17:05:48.757Z",
+    "note": "Meridian: Seriennummer «N° 0427» metallisiert auf die Innenseite des Saphirbodens gedruckt, über der Platine bei 6 Uhr",
+    "bytes": 2555668,
+    "thumb": "v029.webp"
   }
 ]

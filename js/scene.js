@@ -33,6 +33,15 @@ function findMovers(root) {
   return movers;
 }
 
+// Parts the user can turn by hand in steps (userData.ratchet = { step }, e.g. a dive watch bezel)
+function findRatchets(root) {
+  const ratchets = [];
+  root.traverse((obj) => {
+    if (obj.userData.ratchet) ratchets.push(obj);
+  });
+  return ratchets;
+}
+
 // Fades the strap (opacity 0..1) so one can look past the clasp at the movement. Faded meshes get transparent
 // copies of their materials (materials are shared with the case); at opacity 1 the originals come back.
 // A material swapped in meanwhile (another look) simply becomes the new original.
@@ -78,6 +87,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   let parts = loaded.parts;
   let display = liveDisplay(parts);
   let movers = findMovers(watch);
+  let ratchets = findRatchets(watch);
   useGlassEnvironment(watch, glassEnvironment);
   rig.add(watch);
 
@@ -113,6 +123,46 @@ export async function createViewer(container, { reducedMotion = false, modelPath
   container.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'touch') controls.enableZoom = true;
   }, { capture: true });
+
+  // Turning parts by hand: pressing on one turns it a step counter-clockwise (seen from the front), holding
+  // keeps it clicking. Listens in the capture phase, so the orbit controls don't start a drag at the same time.
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  const ratchetAt = (e) => {
+    if (!ratchets.length) return null;
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    raycaster.setFromCamera(pointer, camera);
+    let obj = raycaster.intersectObjects(ratchets, true)[0]?.object;
+    while (obj && !obj.userData.ratchet) obj = obj.parent;
+    return obj ?? null;
+  };
+  const turn = (obj) => {
+    obj.userData.ratchetTarget = (obj.userData.ratchetTarget ?? obj.rotation.z) + obj.userData.ratchet.step;
+    if (reducedMotion) obj.rotation.z = obj.userData.ratchetTarget;
+  };
+  let holding = null;
+  const release = () => {
+    if (!holding) return;
+    clearTimeout(holding.delay);
+    clearInterval(holding.repeat);
+    holding = null;
+    controls.enabled = true;
+  };
+  container.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    const obj = ratchetAt(e);
+    if (!obj) return;
+    controls.enabled = false;
+    turn(obj);
+    holding = { delay: setTimeout(() => { holding.repeat = setInterval(() => turn(obj), 120); }, 380) };
+  }, { capture: true });
+  window.addEventListener('pointerup', release);
+  window.addEventListener('pointercancel', release);
+  renderer.domElement.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse' || e.buttons) return;
+    renderer.domElement.style.cursor = ratchetAt(e) ? 'pointer' : '';
+  });
 
   function fitDistance(aspect) {
     const tan = Math.tan(THREE.MathUtils.degToRad(FOV / 2));
@@ -184,6 +234,10 @@ export async function createViewer(container, { reducedMotion = false, modelPath
       }
     }
     if (parts.rotor && !reducedMotion) parts.rotor.rotation.z -= 0.004;
+    for (const obj of ratchets) {
+      const target = obj.userData.ratchetTarget;
+      if (target !== undefined) obj.rotation.z += (target - obj.rotation.z) * Math.min(1, dt * 20);
+    }
     controls.update();
     updateStrapFade();
     renderer.render(scene, camera);
@@ -218,6 +272,7 @@ export async function createViewer(container, { reducedMotion = false, modelPath
     parts = next.parts;
     display = nextDisplay;
     movers = findMovers(watch);
+    ratchets = findRatchets(watch);
     rig.add(watch);
     render();
     return true;

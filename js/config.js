@@ -21,6 +21,7 @@ export const WATCH_PARTS = {
 export const MODELS = {
   meridian: { label: 'Meridian', kind: 'analog' },
   lumen: { label: 'Lumen', kind: 'digital' },
+  abyss: { label: 'Abyss', kind: 'analog' },
 };
 export const DEFAULT_MODEL = 'meridian';
 

@@ -30,6 +30,10 @@ async function buildModel(model) {
     const { buildDigitalWatch } = await import('./digitalWatch.js');
     return buildDigitalWatch();
   }
+  if (model === 'abyss') {
+    const { buildDiverWatch } = await import('./diverWatch.js');
+    return buildDiverWatch();
+  }
   return buildProceduralWatch();
 }
 

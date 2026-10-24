@@ -953,6 +953,42 @@ export function buildCasebackGlass(material) {
   mesh.geometry.deleteAttribute('uv');
   mesh.name = 'CasebackGlass';
   mesh.renderOrder = 2;
+  mesh.add(buildGlassPrint(SERIAL));
+  return mesh;
+}
+
+// Serial number printed (metallised) on the inside of the sapphire, along the lower edge of the window,
+// readable from behind
+const SERIAL = 'N° 0427';
+function buildGlassPrint(text) {
+  const disc = 11.35;
+  const texture = canvasTexture(2048, (ctx, size) => {
+    const c = size / 2;
+    const scale = c / disc;
+    ctx.fillStyle = '#fff';
+    ctx.font = `500 ${0.5 * scale}px "Inter", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    // Just left of 6 o'clock (seen from behind), clear of the train bridge's foot screw; letters upright (feet
+    // towards the rim), left to right; over the dark plate, clear of the bright fluted ring wall
+    const r = 9.45 * scale;
+    const spacing = (0.42 * scale) / r;
+    const start = Math.PI / 2 - 0.2 + ((text.length - 1) * spacing) / 2;
+    [...text].forEach((ch, i) => {
+      const a = start - i * spacing;
+      ctx.save();
+      ctx.translate(c + Math.cos(a) * r, c + Math.sin(a) * r);
+      ctx.rotate(a - Math.PI / 2);
+      ctx.fillText(ch, 0, 0);
+      ctx.restore();
+    });
+  }, { repeat: false, alpha: true });
+  const geo = planarUVs(new THREE.RingGeometry(8.9, 10.0, 96, 1, Math.PI * 1.25, Math.PI * 0.5), { disc: { x: 0, y: 0, r: disc }, mirror: true });
+  const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+    name: 'GlassPrint', color: 0xe9ecf0, alphaMap: texture, transparent: true, depthWrite: false, metalness: 0.6, roughness: 0.35, side: THREE.DoubleSide,
+  }));
+  mesh.position.z = Z.glassInner - 0.01; // just inside the glass, printed on its inner face
+  mesh.renderOrder = 1;
   return mesh;
 }
 
